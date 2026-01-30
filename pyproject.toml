@@ -1,0 +1,23 @@
+[build-system]
+requires      = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "optical_diagram"
+dynamic = ["version"]
+authors = [
+    { name = "Noé Hirschauer", email = "noe.hirschauer@universite-paris-saclay.fr" },
+]
+description = "Draw optical diagrams using matplotlib."
+requires-python = ">=3.8"
+
+[tool.setuptools]
+packages = ["optical_diagram"]
+
+[tool.setuptools.dynamic]
+version = { attr = "optical_diagram.__version__" }
+
+[tool.pytest.ini_options]
+pythonpath = ["."]  # ALlow imports from the root directory in the tests folder
+testpaths  = ["tests"]
+addopts    = ["--import-mode=importlib"]
