@@ -1,3 +1,8 @@
+"""
+This is `optical_diagram`, a small module building on Matplotlib to create
+optical diagrams with lenses, mirrors, fibers, and (minimal) ray tracing.
+"""
+
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Literal
