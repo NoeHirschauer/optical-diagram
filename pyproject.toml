@@ -10,6 +10,41 @@ authors = [
 ]
 description = "Draw optical diagrams using matplotlib."
 requires-python = ">=3.8"
+license = { file = "LICENSE" }
+readme = "README.md"
+
+# Project URLs
+urls = { "Repository" = "https://github.com/NoeHirschauer/optical-diagram" }
+
+# core dependencies
+dependencies = [
+    "matplotlib>=3",
+    "numpy>=1.20",
+]
+
+# build optional dependencies (documentation, testing, etc.)
+[project.optional-dependencies]
+
+# documentation dependencies
+docs = [
+    "sphinx>=8.0",
+    "pydata-sphinx-theme>=0.15",
+    "sphinx_gallery>=0.20"
+]
+
+# testing dependencies
+tests = [
+    "pytest>=7.0",
+]
+
+# combined development dependencies
+dev = [
+    "sphinx>=8.0",
+    "pydata-sphinx-theme>=0.15",
+    "sphinx_gallery>=0.20",
+    "pytest>=7.0",
+]
+
 
 [tool.setuptools]
 packages = ["optical_diagram"]

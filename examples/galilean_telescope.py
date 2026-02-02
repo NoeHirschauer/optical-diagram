@@ -1,22 +1,23 @@
 """
 Galilean telescope (afocal) example
------------------------------------
+===================================
 
 A minimal  example showing a Galilean telescope:
+
 - Large converging objective (long focal length)
 - Shorter negative-focal diverging eyepiece
-- A collimated ("from infinity") input beam approximated by a Point very far to the left
-- A RayTracedBeam propagating through the system
+- A RayTracedBeam propagating through the system for on-axis and off-axis collimated sources
 
 This script is intentionally verbose in comments to demonstrate how to declare
 and initialize every OpticalElement used.
 """
 
+# %%
+# Import necessary classes from optical_diagram
+
 from optical_diagram import (
     DOWN,
-    LEFT,
     RIGHT,
-    UP,
     ConvergingLens,
     DivergingLens,
     Label,
@@ -26,84 +27,153 @@ from optical_diagram import (
     RayTracedBeam,
 )
 
-# 1) Create the drawing canvas (OpticalTable)
-table = OpticalTable(
-    size=(16, 6), title="Galilean Telescope (Afocal)", dpi=150, mode="axial"
-)
+# %%
+# 1) Initialisation
+# -----------------
+#
+# Define the dimensions of the plot and prepare collectors for elements that will be
+# added later
 
-# 1) Define the objective lens (converging)
-#    - position: place it roughly 1/4 from the left
-#    - size: physical diameter for visualization
-#    - focal_length: positive for converging lens (long focal)
+diagram_size = (12, 6)  # width, height
+
+# collectors to hold objects until the final cell
+_elements = []
+_beams = []
+_labels = []
+
+# %%
+# 2) Define the lenses and planes
+# -------------------------------
+#
+# We start by defining the objective lens and the object plane. Note how we use
+# relative positioning to place all the elements in the diagram. This way, only editing
+# the position of the ``object_plane`` updates the position of the other elements, and
+# changing the focal lengths or sizes of elements automatically updates the layout
+
+# Define the object plane (entrance pupil plane) and objective lens
+
+diameter = diagram_size[1] * 0.5  # 50% of table height
+
+object_plane = Plane(position=(2, 3), size=diameter)
 
 objective_f = 4.0  # focal length of objective (units consistent with table)
-objective = ConvergingLens(
-    position=(4.0, 3.0), size=1.5, focal_length=objective_f, color="C0"
+objective = ConvergingLens(size=diameter, focal_length=objective_f).next_to(
+    object_plane, RIGHT, buff=objective_f
 )
 
+# store them for later addition to the table
+_elements.extend([object_plane, objective])
 
-# 3) Define the eyepiece (diverging lens for Galilean telescope)
-#    - focal_length: negative for a diverging eyepiece
-#    - separation between lenses = f_objective + f_eyepiece (since f_eyepiece < 0)
+# Define the eyepiece (diverging lens for Galilean telescope)
 
-eyepiece_f = -1.0  # negative focal length (shorter magnitude)
-separation = objective_f + eyepiece_f  # < objective_f because eyepiece_f is negative
-eyepiece_pos = (objective.center[0] + separation, objective.center[1])
+eyepiece_f = -1.0  # negative focal length (and of shorter magnitude)
+separation = objective_f + eyepiece_f  # distance between lenses for an afocal system
+
 eyepiece = DivergingLens(
-    position=eyepiece_pos, size=1.0, focal_length=eyepiece_f, color="C1"
+    position=objective,  # setting another OpticalElement as reference uses its center
+    size=diameter / 2,
+    focal_length=eyepiece_f,
+).shift(separation * RIGHT)
+
+_elements.append(eyepiece)
+
+# %%
+# 3) Define the position of the output pupil plane
+# ------------------------------------------------
+#
+# The output pupil is defined as the image of the input pupil (objective) through the
+# optical system. This is not strictly necessary but helps to define intersection planes
+# for the `RayTracedBeam`.
+#
+# Note that in our simple situation, we could set it at an arbitrary distance after the
+# eyepiece, since the output rays are collimated. However, we use this opportunity to
+# display other operations on OpticalElements.
+
+dist_eyepiece_to_pupil = separation * eyepiece.size / objective.size  # similar triangles
+pupil_plane = (
+    object_plane.copy().move_to(eyepiece).shift(dist_eyepiece_to_pupil * RIGHT).scale(0.5)
 )
 
+_elements.append(pupil_plane)
 
-# 4) Define a collimated source "at infinity"
-#    - We approximate a collimated beam from infinity by placing a Point far to the left.
-#    - The RayTracedBeam will use this Point as its first element to compute the incoming axis.
-#    - For an afocal system the output rays should be collimated again after the eyepiece.
+# %%
+# 4) Trace the beams through the system
+# --------------------------------------
+# We define a collimated source "at infinity" (on-axis and off-axis beams) using 2
+# approaches to demonstrate different ways of defining the source & the beam.
+#
+# 1. On-axis source: use a Plane as the source element, and define a RayTracedBeam with
+#    zero divergence to represent collimated light.
+# 2. Off-axis source: use a Point source off-axis with zero size, and define a small
+#    divergence angle to represent a slightly off-axis collimated beam.
 
-infty_source = Point(
-    position=(-200.0, 3.0), size=0.05, color="k"
-)  # far-away point ≈ infinity
-
-
-
-# 5) Add a screen/plane further to the right to visualize output directions (optional)
-
-screen_x = eyepiece.center[0] + 8.0
-screen = Point(position=(screen_x, 3.0), size=0.05, color="0.5")
-
-
-# 6) Create a RayTracedBeam
-#    - elements: (source, objective, eyepiece, screen)
-#    - initial_width: beam diameter at the source (visual)
-#    - divergence: small angular spread for a finite-width bundle (deg)
-
-beam = RayTracedBeam(
-    elements=(infty_source, objective, eyepiece, screen),
-    initial_width=0.6,
-    divergence=0.5,
-    color="C2",
-    alpha=0.25,
+on_axis_beam = RayTracedBeam(
+    (object_plane, objective, eyepiece, pupil_plane),  # list of elements to trace through
+    initial_width=diameter * 0.8,  # full diameter at the source
+    divergence=0.0,  # perfectly collimated
+    color="C0",
 )
 
+_beams.append(on_axis_beam)
 
-
-
-# Add elements to the table
-
-table.add(infty_source, objective, eyepiece, screen, beam)
-
-
-# Add labels to explain elements (Label(anchor, direction, text))
-
-table.add(
-    Label(objective, DOWN, "Objective\n(Converging, f = {:.1f})".format(objective_f)),
-    Label(eyepiece, DOWN, "Eyepiece\n(Diverging, f = {:.1f})".format(eyepiece_f)),
-    # Label(infty_source, LEFT, "Collimated source\n(approx. infinity)"),
+off_axis_source = Point(position=(-1000, 50), size=0, color="C1")
+off_axis_beam = RayTracedBeam(
+    (off_axis_source, objective, eyepiece, pupil_plane),
+    initial_width=0,
+    divergence=diameter / 100,  # small angular spread
+    color="C1",
 )
 
-# 9) Cosmetic: hide tick numbers and optionally show a light grid
+_beams.append(off_axis_beam)
 
+# %%
+# 5) Add labels to elements
+# -------------------------
+#
+# These labels will be shown in the diagram. You can use math mode and any text
+# customization supported by matplotlib's `Text` class.
+
+_label_obj = Label(
+    objective,
+    DOWN,
+    f"Objective\n($f = {objective.focal_length:.1f}$)",
+    fontsize="small",
+)
+_label_eye = Label(
+    eyepiece,
+    DOWN,
+    f"Eyepiece\n($f = {eyepiece.focal_length:.1f}$)",
+    fontsize="small",
+    buffer=diameter / 4 + 0.1,
+)
+
+_labels.extend([_label_obj, _label_eye])
+
+# %%
+# 6) Create the diagram & render
+# ------------------------------
+#
+# Finally, we create the OpticalTable, add all the elements, beams and labels, and
+# render the diagram.
+#
+# Note that we do this at the end of the script because it is run in a Jupyter notebook,
+# where exiting a cell with a variable displays it automatically.
+#
+# If running as a standalone script, you could create the table at the start and add
+# elements as you go.
+#
+# In any case, the elements are only drawn/computed when `OpticalTable.show()` is called.
+
+table = OpticalTable(
+    size=diagram_size, title="Galilean Telescope (Afocal)", dpi=200, mode="axial"
+)
+
+# add all the collected items in a single call
+table.add(*_elements, *_beams, *_labels)
+
+# customize appearance: hide ticks, show grid
 table.hide_ticks().show_grid(visible=True, alpha=0.15)
 
-# 10) Render and display the example (sphinx-gallery will capture this plot)
+# render and display
 table.show()
 

@@ -25,6 +25,8 @@ def test_constants():
     assert np.allclose(ORIGIN, np.array((0.0, 0.0)))
     # diagonal checks
     assert np.allclose(UR, UP + RIGHT)
+    assert np.allclose(UL, UP + LEFT)
+    assert np.allclose(DR, DOWN + RIGHT)
     assert np.allclose(DL, DOWN + LEFT)
 
 
