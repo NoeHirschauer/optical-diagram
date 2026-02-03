@@ -209,5 +209,5 @@ __marimo__/
 
 # Docs & Sphinx generated files
 docs/build/
-docs/source/auto_api/
-docs/source/auto_examples/
+docs/source/_autosummary/
+docs/source/_autoexamples/

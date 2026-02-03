@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -9,11 +10,35 @@ import pytest
 # since we are in tests/, import from parent directory. Note that pyproject.toml defines
 # the rooot of
 from optical_diagram import (
-    RIGHT, LEFT, UP, DOWN, UR, UL, DR, DL, ORIGIN,
-    PlaneMirror, ConcaveMirror, ConvexMirror, ConvergingLens, DivergingLens,
-    BeamSplitter, Plane, Point, OpticalAxis, Label, Rectangle, SurroundingRectangle,
-    Fiber, SimpleBeam, DivergingBeam, RayTracedBeam, OpticalTable,
-    get_axis_direction, get_normal_direction, get_normal_vector,
+    RIGHT,
+    LEFT,
+    UP,
+    DOWN,
+    UR,
+    UL,
+    DR,
+    DL,
+    ORIGIN,
+    PlaneMirror,
+    ConcaveMirror,
+    ConvexMirror,
+    ConvergingLens,
+    DivergingLens,
+    BeamSplitter,
+    Plane,
+    Point,
+    OpticalAxis,
+    Label,
+    Rectangle,
+    SurroundingRectangle,
+    Fiber,
+    SimpleBeam,
+    DivergingBeam,
+    RayTracedBeam,
+    OpticalTable,
+    get_axis_direction,
+    get_normal_direction,
+    get_normal_vector,
 )
 
 
