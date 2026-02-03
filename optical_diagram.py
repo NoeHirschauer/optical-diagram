@@ -149,6 +149,14 @@ class OpticalElement(ABC):
         self._center = np.asarray(value, dtype=float)
 
     @property
+    def size(self):
+        return self._size
+    
+    @size.setter
+    def size(self, value):
+        self._size = float(value)
+
+    @property
     def x(self):
         return self._center[0]
 
@@ -156,9 +164,7 @@ class OpticalElement(ABC):
     def y(self):
         return self._center[1]
 
-    @property
-    def size(self):
-        return self._size
+    
 
     @property
     def angle(self):
@@ -1186,7 +1192,7 @@ class DivergingBeam(OpticalElement):
 
 class RayTracedBeam(OpticalElement):
     def __init__(self, elements, initial_width=0, divergence=0.0, **kwargs):
-        self.elements = elements
+        self.elements: list[OpticalElement] = elements
         self.initial_width = initial_width
         self.divergence = np.deg2rad(2 * divergence)
 
@@ -1220,7 +1226,7 @@ class RayTracedBeam(OpticalElement):
         t_pos = self.elements[0].center + perp * (self.initial_width / 2)
         b_pos = self.elements[0].center - perp * (self.initial_width / 2)
 
-        # Initial directions (with divergence)
+        # Initial directions of the marginal rays
         div = self.divergence / 2
         rot_t = np.array([[np.cos(div), -np.sin(div)], [np.sin(div), np.cos(div)]])
         rot_b = np.array([[np.cos(-div), -np.sin(-div)], [np.sin(-div), np.cos(-div)]])
@@ -1283,6 +1289,7 @@ class RayTracedBeam(OpticalElement):
 
     def draw(self, ax):
         """Override to handle PolyCollection instead of Patch."""
+        
         artist = self._get_mpl_artist()
         ax.add_collection(artist)
         return artist
@@ -1588,6 +1595,29 @@ class OpticalTable:
             else:
                 raise TypeError(f"Expected OpticalElement, got {type(el)}")
         return self
+
+    def auto_scale(self):
+        """Resize all elements on the table to fit raytraced beams."""
+        # Find all RayTracedBeams
+        beams: list[RayTracedBeam]
+        beams = [el for el in self.elements if isinstance(el, RayTracedBeam)]
+        if not beams:
+            return self  # nothing to do
+
+        for beam in beams:
+            for el in beam.elements:
+                beam_position = beam.get_intersection_with(el)  # ensure intersections are computed
+                top = el.center[1] + el.size / 2
+                bot = el.center[1] - el.size / 2
+                if beam_position[1] > top:
+                    el.size = 2*(beam_position[1]+el.center[1]) * 1.5
+                if beam_position[1] < bot:
+                    el.size = 2*(el.center[1]-beam_position[1]) * 1.5
+                    
+        return self
+
+
+
 
     def show_grid(self, visible=True, alpha=0.2):
         """Toggle the background grid.
