@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib.patches import Circle, FancyArrowPatch
 from matplotlib.patches import Polygon as MplPolygon
 
-from ._base import ORIGIN, OpticalElement
+from ._base import DOWN, LEFT, ORIGIN, RIGHT, OpticalElement
 
 __all__ = [
     "Plane",
@@ -157,6 +157,41 @@ class Label(OpticalElement):
             rotation=self._angle,
             **style,
         )
+    
+class Arrow(OpticalElement):
+    """
+    An arrow between two points or elements.
+    """
+    def __init__(self, start, end, **kwargs):
+        
+        self.start = (
+            start.center if isinstance(start, OpticalElement) else np.asarray(start)
+        )
+        self.end = (
+            end.center if isinstance(end, OpticalElement) else np.asarray(end)
+        )
+        center = (self.start + self.end) / 2
+        dist = np.linalg.norm(self.end - self.start)
+
+        # Calculate angle
+        delta = self.end - self.start
+        angle = np.degrees(np.arctan2(delta[1], delta[0]))
+
+        kwargs.setdefault("color", "black")
+        kwargs.setdefault("arrowstyle", "->")
+        kwargs.setdefault("linewidth", 1.5)
+        kwargs.setdefault("zorder", 10)
+
+        super().__init__(center, dist, angle, **kwargs)
+
+    def get_local_points(self):
+        h = self._size / 2.0
+        return np.array([[-h, 0], [h, 0]])
+
+    def _get_mpl_artist(self):
+        pts = self.get_critical_points()
+        style = self._style.copy()
+        return FancyArrowPatch(pts[0], pts[1], **style)
 
 
 class Rectangle(OpticalElement):
