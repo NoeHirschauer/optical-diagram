@@ -15,6 +15,7 @@ __all__ = [
     "ORIGIN",
     "OpticalElement",
     "OpticalSystem",
+    "Group",
     "get_axis_direction",
     "get_normal_direction",
     "get_normal_vector",
@@ -566,7 +567,7 @@ class OpticalSystem(OpticalElement):
     @property
     def focal_length(self):
         """float or None: The focal length of the optical system.
-        
+
         If None, the element has no focusing power.
         """
         return self._focal_length
@@ -574,6 +575,148 @@ class OpticalSystem(OpticalElement):
     @focal_length.setter
     def focal_length(self, value):
         self._focal_length = value
+
+
+class Group(OpticalElement):
+    """A collection of OpticalElements treated as a single unit."""
+
+    def __init__(self, elements, **kwargs):
+        # Compute center as the centroid of all elements
+        centers = np.array([el.center for el in elements])
+        group_center = np.mean(centers, axis=0)
+
+        # Compute size as the max distance from center to any element's edge
+        max_dist = 0.0
+        for el in elements:
+            min_x, min_y, max_x, max_y = el.get_boundary_box()
+            corners = np.array(
+                [[min_x, min_y], [min_x, max_y], [max_x, min_y], [max_x, max_y]]
+            )
+            dists = np.linalg.norm(corners - group_center, axis=1)
+            max_dist = max(max_dist, np.max(dists))
+
+        super().__init__(position=group_center, size=2 * max_dist, angle=0.0, **kwargs)
+        self.elements = elements
+
+    def _get_mpl_artist(self):
+        # Groups do not have a direct artist; they render their elements instead.
+        raise NotImplementedError("Group does not have a direct matplotlib artist.")
+
+    def draw(self, ax):
+        """Draw all elements in the group."""
+        artists = []
+        for el in self.elements:
+            artist = el.draw(ax)
+            artists.append(artist)
+        return artists
+
+    # ----- Delegated transforms (update group props AND elements) -----
+    def move_to(self, target):
+        if isinstance(target, OpticalElement):
+            target = target.center
+        else:
+            target = np.asarray(target, float)
+        delta = target - self.center
+        # Update group center
+        self.center = target
+        # Apply to elements
+        for el in self.elements:
+            el.shift(delta)
+        return self
+
+    def shift(self, vector):
+        vec = np.asarray(vector, float)
+        # Update group center
+        self.center = self.center + vec
+        # Apply to elements
+        for el in self.elements:
+            el.shift(vec)
+        return self
+
+    def rotate(self, angle_degrees, about_point=None):
+        # Resolve pivot
+        if about_point is None:
+            pivot = self.center
+        elif isinstance(about_point, OpticalElement):
+            pivot = about_point.center
+        else:
+            pivot = np.asarray(about_point, float)
+
+        # Update group angle
+        self._angle += angle_degrees
+
+        # If rotating about a pivot not equal to group's center, update group's center
+        if pivot is not None:
+            rad = np.deg2rad(angle_degrees)
+            rot_matrix = np.array([[np.cos(rad), -np.sin(rad)], [np.sin(rad), np.cos(rad)]])
+            self.center = rot_matrix @ (self.center - pivot) + pivot
+
+        # Delegate to elements
+        for el in self.elements:
+            el.rotate(angle_degrees, about_point=pivot)
+        return self
+
+    def flip(self, axis=UP, about_point=None):
+        # Resolve pivot
+        if about_point is None:
+            pivot = self.center
+        elif isinstance(about_point, OpticalElement):
+            pivot = about_point.center
+        else:
+            pivot = np.asarray(about_point, float)
+
+        # Normalize axis
+        axis_vec = np.asarray(axis, float)
+        axis_unit = axis_vec / np.linalg.norm(axis_vec)
+
+        # Update group's center by reflection
+        v = self.center - pivot
+        v_reflected = 2 * np.dot(v, axis_unit) * axis_unit - v
+        self.center = pivot + v_reflected
+
+        # Update group's angle
+        axis_angle = np.degrees(np.arctan2(axis_unit[1], axis_unit[0]))
+        self._angle = 2 * axis_angle - self._angle
+
+        # Delegate to elements
+        for el in self.elements:
+            el.flip(axis=axis, about_point=pivot)
+        return self
+
+    def scale(self, scale_factor, about_point=None):
+        # Resolve pivot
+        if about_point is None:
+            pivot = self.center
+        elif isinstance(about_point, OpticalElement):
+            pivot = about_point.center
+        else:
+            pivot = np.asarray(about_point, float)
+
+        # Update group's size
+        self._size *= scale_factor
+
+        # Update group's center if scaling about another point
+        if pivot is not None:
+            relative_vector = self.center - pivot
+            self.center = (scale_factor * relative_vector) + pivot
+
+        # Delegate to elements
+        for el in self.elements:
+            el.scale(scale_factor, about_point=pivot)
+        return self
+
+    def next_to(self, other, direction=RIGHT, buff=0.0):
+        target_point = other.get_edge(direction)
+        my_anchor = self.get_edge(-np.array(direction))
+        shift_vec = target_point - my_anchor + np.array(direction) * buff
+
+        # Update group center
+        self.center = self.center + shift_vec
+
+        # Apply to elements
+        for el in self.elements:
+            el.shift(shift_vec)
+        return self
 
 
 # helper functions
