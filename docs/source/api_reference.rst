@@ -55,6 +55,7 @@ Fibers & Waveguides
 
    Fiber
    FiberSplitter
+   FiberCoupler
 
 Beams & Ray Tracing
 -------------------

@@ -500,9 +500,11 @@ class FiberSplitter(Group):
 
 class FiberCoupler(Group):
     """
-    Coupler implemented as a Group of four Fiber segments (two per channel).
-    The four corner points lie at the rectangle corners determined by:
-      center (position), axis (input->output), length (axial distance), height (transverse separation).
+    Coupler between 2 channels (2 inputs, 2 outputs)
+    
+    Implemented as a Group of 4 Fibers to be able to independently control the center
+    separation (distance between the midpoints of the two channels) without affecting the
+    overall geometry defined by the input/output positions.
     """
 
     def __init__(
@@ -634,7 +636,8 @@ class FiberCoupler(Group):
 
         # Manually move the start points of fiber_a2 and fiber_b2 to match the mid points.
         # These start_point attributes are separate Point instances created when the Fiber
-        # objects were initialized; they do not share references with mid_a_point/mid_b_point.
+        # objects were initialized; they do not share references with mid_a_point or 
+        # mid_b_point.
         # Because of this, they are not updated by the midpoint transforms and must be
         # synchronized here. We cannot simply reuse the same Point objects for both roles,
         # or the transforms applied by each Fiber would accumulate incorrectly.
@@ -702,19 +705,23 @@ class FiberCoupler(Group):
 
     # chaining helpers
     def set_length(self, value):
+        """Set the axial length of each channel."""
         self.length = value
         return self
 
     def set_height(self, value):
+        """Set the height (transverse separation) of each channel."""
         self.height = value
         return self
 
     def set_min_separation(self, value):
+        """Set the minimum separation between the two channels at the center."""
         self.min_separation = value
         return self
 
     # --- show connections (delegates to internal fibers) -----------------------
     def show_connections(self, in_a=True, in_b=True, out_a=True, out_b=True):
+        """Show or hide connection markers at the input/output points of each channel."""
         self._show_in_a = in_a
         self._show_in_b = in_b
         self._show_out_a = out_a
