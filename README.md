@@ -62,7 +62,5 @@ From the repository root you can build the Sphinx docs in two common ways:
 
 ### Notes
 
-- The docs use `sphinx_gallery` to generate example galleries; building the docs will execute the examples and place generated output under `docs/build/html` (or as configured).
+- The docs use `sphinx_gallery` to generate example galleries; building the docs will execute the examples and place generated output under `docs/build/html/auto_examples`.
 - If you installed the docs extras with `pip install .[docs]`, the required Sphinx packages will be available locally.
-
-

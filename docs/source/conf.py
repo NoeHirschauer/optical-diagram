@@ -23,7 +23,11 @@ APIDOC_PATH = os.path.join(os.path.dirname(__file__), "auto_api")
 project = "optical-diagram"
 copyright = "2026, Noé Hirschauer"
 author = "Noé Hirschauer"
-release = "0.1.0"
+github_repo = "https://github.com/NoeHirschauer/optical-diagram"
+
+# read the version from the package __init__.py
+from optical_diagram import __version__
+release = version = __version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -40,7 +44,7 @@ extensions = [
 
 sphinx_gallery_conf = {
     "examples_dirs": os.path.join(PKG_PATH, "examples"),  # path to example scripts
-    "gallery_dirs": "auto_examples",  # path to save generated examples
+    "gallery_dirs": "_autoexamples",  # path to save generated examples
     "filename_pattern": r"\.py",  # include all .py files
     "line_numbers": False,  # do not add line numbers to code blocks
     "download_all_examples": False,  # do not add a "download all" link
@@ -86,6 +90,9 @@ viewcode_line_numbers = True
 # The reST default role (used for this markup: `text`) to use for all documents.
 default_role = "autolink"
 
+# Auto-summary configuration
+autosummary_generate = True  # generate stub pages automatically
+
 # %% Napoleon configuration
 
 napoleon_numpy_docstring = True
@@ -96,6 +103,7 @@ napoleon_include_special_with_doc = True
 napoleon_use_admonition_for_examples = True
 napoleon_use_admonition_for_notes = True
 napoleon_use_admonition_for_references = True
+
 napoleon_use_rtype = False
 
 
@@ -106,33 +114,24 @@ html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 
 html_theme_options = {
-    "show_nav_level": 1,    # Only shows the top level by default
+    "show_nav_level": 1,  # Only shows the top level by default
     "navigation_depth": 3,  # Stops the sidebar from expanding to level 3
-    "show_toc_level": 1,    # show 1 level in page toc by default
+    "show_toc_level": 2,  # show 2 levels in page toc by default
     "collapse_navigation": False,
     "footer_start": ["copyright"],
     "footer_center": ["sphinx-version"],
     "footer_end": ["theme-version"],
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": github_repo,
+            "icon": "fa-brands fa-square-github",
+            "type": "fontawesome",
+        },
+    ],
 }
 
-
-# define a custom setup function that runs apidoc before building the docs
-def _run_apidoc(_):
-    from sphinx.ext.apidoc import main as apidoc_main
-
-    # Generate the API documentation
-    apidoc_main(
-        [
-            "--no-toc",
-            "--force",
-            "--separate",
-            "--module-first",
-            "-o",
-            APIDOC_PATH,
-            PKG_PATH,
-        ]
-    )
-
-
-def setup(app):
-    app.connect("builder-inited", _run_apidoc)
+# add css files to the build
+html_css_files = [
+    "monospace_titles.css",
+]

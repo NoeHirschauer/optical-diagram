@@ -24,8 +24,8 @@ help:
 # add a "make clean" that removes everything in build, source/auto_api and source/auto_examples
 clean:
 	rm -rf $(BUILDDIR)/*
-	rm -rf $(SOURCEDIR)/auto_api/*
-	rm -rf $(SOURCEDIR)/auto_examples/*
+	rm -rf $(SOURCEDIR)/_autosummary/*
+	rm -rf $(SOURCEDIR)/_autoexamples/*
 .PHONY: clean
 
 # define a "make view" that opens the docs html index in the default browser
