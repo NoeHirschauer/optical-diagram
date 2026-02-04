@@ -4,7 +4,7 @@
 """
 
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 
 from ._base import (
@@ -33,7 +33,7 @@ from ._annotations import (
     Rectangle,
     SurroundingRectangle,
 )
-from ._fiber import Fiber, FiberSplitter
+from ._fiber import Fiber, FiberSplitter, FiberCoupler
 from ._table import OpticalTable
 
 __all__ = [
@@ -69,6 +69,7 @@ __all__ = [
     # Fiber components
     "Fiber",
     "FiberSplitter",
+    "FiberCoupler",
 
     # Beams
     "SimpleBeam",
