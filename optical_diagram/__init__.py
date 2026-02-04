@@ -4,7 +4,7 @@
 """
 
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 
 
 from ._base import (
@@ -17,6 +17,7 @@ from ._base import (
     DR,
     DL,
     ORIGIN,
+    Group,
     get_axis_direction,
     get_normal_direction,
     get_normal_vector,
@@ -32,7 +33,7 @@ from ._annotations import (
     Rectangle,
     SurroundingRectangle,
 )
-from ._fiber import Fiber
+from ._fiber import Fiber, FiberSplitter
 from ._table import OpticalTable
 
 __all__ = [
@@ -65,8 +66,9 @@ __all__ = [
     "Rectangle",
     "SurroundingRectangle",
     
-    # Fiber
+    # Fiber components
     "Fiber",
+    "FiberSplitter",
 
     # Beams
     "SimpleBeam",
@@ -76,7 +78,8 @@ __all__ = [
     # Table
     "OpticalTable",
     
-    # Utility functions
+    # Utilities
+    "Group",
     "get_axis_direction",
     "get_normal_direction",
     "get_normal_vector",

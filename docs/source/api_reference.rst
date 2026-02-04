@@ -15,6 +15,7 @@ Base Classes
 
    OpticalElement
    OpticalSystem
+   Group
 
 .. currentmodule:: optical_diagram
 
@@ -53,6 +54,7 @@ Fibers & Waveguides
    :nosignatures:
 
    Fiber
+   FiberSplitter
 
 Beams & Ray Tracing
 -------------------
