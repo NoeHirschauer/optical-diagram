@@ -9,18 +9,23 @@ Releases
    :local:
 
 
+Version 0.4.2
+-------------
+
+- fixed the color property of `Point` and changed the color logic of fibers to ensure
+  that the color of the `Fiber` is properly reflected in the end `Points`
+
+Previous Releases
+=================
+
 Version 0.4.1
-=============
+--------------
 
 - Fixed the anchor point of `FiberSplitter` for move_to such that it uses its input point.
 - Changed the coordinate system of `OpticalTable` such that it is centered. This breaks backwards compatibility, but I am alone on this project, so I can do that. 
 - Updated the examples to reflect the changes to `OpticalTable`.
 - Added display tests for `FiberSplitter`.
 - Added show_labels method for debugging in `FiberSplitter` and `FiberCoupler`.
-
-
-Previous Releases
-=================
 
 Version 0.4.0
 -------------

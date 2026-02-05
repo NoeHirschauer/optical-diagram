@@ -20,25 +20,23 @@ class Fiber(OpticalElement):
         self, start, end, angle_start=0.0, angle_end=0.0, stiffness=0.5, **kwargs
     ):
         # ensure fiber is not filled by default (closed PathPatch becomes filled otherwise)
-        kwargs.setdefault("facecolor", "none")
+        # kwargs.setdefault("facecolor", "none")
 
         # 1. Resolve initial coordinates
         p0_pos = start.center if hasattr(start, "center") else np.asarray(start)
         p3_pos = end.center if hasattr(end, "center") else np.asarray(end)
 
         # 2. Set default styles
-        kwargs.setdefault("edgecolor", "C0")
-        kwargs.setdefault("facecolor", "none")
+        kwargs.setdefault("color", "C0")
         kwargs.setdefault("linewidth", 2.0)
         kwargs.setdefault("zorder", 4)
-        if "color" in kwargs:
-            kwargs["edgecolor"] = kwargs.pop("color")
 
         # 3. Create endpoints as Point objects
         # We pass the fiber's color to the dots so they match by default
-        dot_color = kwargs.get("edgecolor")
+        dot_color = kwargs.get("color")
         self.start_point = Point(p0_pos, color=dot_color)
         self.end_point = Point(p3_pos, color=dot_color)
+        
 
         self.angle_start = float(angle_start)
         self.angle_end = float(angle_end)
@@ -49,6 +47,10 @@ class Fiber(OpticalElement):
         # 4. Initialize base at the midpoint
         midpoint = (self.start_point.center + self.end_point.center) / 2.0
         super().__init__(midpoint, size=1.0, angle=0.0, **kwargs)
+       
+        # override the color property to ensure it is applied to everything
+        if "color" in kwargs:
+            self.color = kwargs.pop("color")
 
     # --- Geometry & Bounding Box ---
 
@@ -132,12 +134,36 @@ class Fiber(OpticalElement):
     # Override facecolor so fibers cannot be filled (avoids closed, filled bezier patch)
     @property
     def facecolor(self):
+        """Fiber is not fillable; this always returns 'none'."""
         return "none"
 
     @facecolor.setter
     def facecolor(self, value):
         # ignore attempts to set a fill on Fiber; ensure it stays 'none'
         self._style["facecolor"] = "none"
+    
+    @property
+    def color(self):
+        """Shorthand color. Proxies to edgecolor for the fiber line"""
+        return self._style.get("edgecolor")
+    
+    @color.setter
+    def color(self, value):
+        """Set shorthand color for the fiber line (proxies to edgecolor).
+        
+        This also updates the ``color`` of the endpoint markers to match the fiber line
+        color for visual consistency.
+        """
+        if value is None:
+            self._style.pop("edgecolor", None)
+        else:
+            self._style["edgecolor"] = value
+            # ensure facecolor is set to none
+            self._style["facecolor"] = "none"
+
+            # Update endpoint colors to match the fiber line color
+            self.start_point.color = value
+            self.end_point.color = value
 
     def _get_mpl_artist(self):
         p0, p1, p2, p3 = self._get_bezier_points()
@@ -215,11 +241,8 @@ class FiberSplitter(Group):
             styling forwarded to the internal Fiber objects
         """
         # styling defaults
-        kwargs.setdefault("facecolor", "none")
-        kwargs.setdefault("edgecolor", "C0")
+        kwargs.setdefault("color", "C0")
 
-        if "color" in kwargs:
-            kwargs["edgecolor"] = kwargs.pop("color")
 
         # Resolve input position
         input_pos = (
@@ -266,6 +289,9 @@ class FiberSplitter(Group):
         elements = [self.fiber_a, self.fiber_b]
         super().__init__(elements, **kwargs)
 
+        if "color" in kwargs:
+            self.color = kwargs.pop("color")
+        
         # We need to update the points if any changes to length/height/alignment occur
         # For this, we save the properties internally.
         self._length = length
@@ -279,6 +305,17 @@ class FiberSplitter(Group):
         self._show_out_a = False
         self._show_out_b = False
         self._show_labels = False  # controls optional debug/annotation labels on splitter points
+
+    # similar to the Fiber class, we override the color property to ensure it is applied to everything
+    @property
+    def color(self):
+        """Shorthand color. Proxies to the internal fibers' color."""
+        return self.fiber_a.color  # both fibers should have the same color
+
+    @color.setter
+    def color(self, value):
+        self.fiber_a.color = value
+        self.fiber_b.color = value
 
 
     def _update_geometry(self):
