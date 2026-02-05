@@ -15,7 +15,6 @@ Base Classes
 
    OpticalElement
    OpticalSystem
-   Group
 
 .. currentmodule:: optical_diagram
 
@@ -106,6 +105,7 @@ Helpers & Utilities
    :template: autosummary/function.rst
    :nosignatures:
 
+   Group
    get_axis_direction
    get_normal_direction
    get_normal_vector
