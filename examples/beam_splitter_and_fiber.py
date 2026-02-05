@@ -1,8 +1,10 @@
 """
-Beam splitter and fiber example
-===============================
-
 .. currentmodule:: optical_diagram
+
+`BeamSplitter` and `Fiber` example
+==================================
+
+Setup with a beam splitter, a fiber, various lenses & raytracing to position the fiber correctly.
 
 This example shows how to create a setup with a beam splitter that splits an incoming
 beam into two paths, one of which is coupled into an optical fiber leading to a box.
@@ -29,9 +31,9 @@ from optical_diagram import (
     Rectangle,
 )
 
-table = OpticalTable(size=(15, 10), dpi=300, title="Example setup").show_grid()
+table = OpticalTable(size=(15, 8), dpi=300, title="Example setup").show_grid()
 
-starting_position = (1, 7)
+starting_position = (-6, 2)
 
 # Object
 obj_plane = Plane(starting_position, color="gray")
@@ -76,7 +78,7 @@ b2 = RayTracedBeam((p2, l1, cube, l4, img_plane2), divergence=10, color=p2.color
 table.add(b0, b1, b2)
 
 fiber_start = b2.get_intersection_with(img_plane2)
-fiber_end = (11, 4)
+fiber_end = (3, -2)
 cable = Fiber(fiber_start, fiber_end, angle_start=-90, color=b2.color).show_connections(
     end=False
 )

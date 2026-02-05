@@ -9,17 +9,25 @@ Releases
    :local:
 
 
-Version 0.4.0
+Version 0.4.1
 =============
 
-- Added `FiberCoupler` class for modeling 2x2 fiber couplers.
-- Improved documentation and examples for `FiberSplitter`.
-- Better logic of `FiberSplitter` properties and methods to avoid code duplication and improve maintainability.
-
+- Fixed the anchor point of `FiberSplitter` for move_to such that it uses its input point.
+- Changed the coordinate system of `OpticalTable` such that it is centered. This breaks backwards compatibility, but I am alone on this project, so I can do that. 
+- Updated the examples to reflect the changes to `OpticalTable`.
+- Added display tests for `FiberSplitter`.
+- Added show_labels method for debugging in `FiberSplitter` and `FiberCoupler`.
 
 
 Previous Releases
 =================
+
+Version 0.4.0
+-------------
+
+- Added `FiberCoupler` class for modeling 2x2 fiber couplers.
+- Improved documentation and examples for `FiberSplitter`.
+- Better logic of `FiberSplitter` properties and methods to avoid code duplication and improve maintainability.
 
 Version 0.3.0
 -------------

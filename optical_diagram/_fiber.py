@@ -278,6 +278,8 @@ class FiberSplitter(Group):
         self._show_input = False
         self._show_out_a = False
         self._show_out_b = False
+        self._show_labels = False  # controls optional debug/annotation labels on splitter points
+
 
     def _update_geometry(self):
         """Internal helper to update output positions based on new geometry."""
@@ -448,6 +450,22 @@ class FiberSplitter(Group):
         self.fiber_b.show_connections(start=input, end=out_b)
 
         return self
+    
+    def show_labels(self):
+        """Display labels to the corner points for debugging.
+
+        These labels are only rendered when the element is drawn, and are not part of the
+        element's geometry or layout. They are intended for debugging and visualization
+        purposes.
+
+        Returns
+        -------
+        self
+            The instance itself (for chaining).
+        """
+        self._show_labels = True
+
+        return self
 
     # transformations that involve any kind of rotation should update the internal axis
 
@@ -474,10 +492,34 @@ class FiberSplitter(Group):
         # normalize and store
         self._axis = reflected / np.linalg.norm(reflected)
 
-        # update transverse accordingly
+        # update transverse accordingly    
         self._axis_transverse = get_normal_vector(self._axis)
-
         return super().flip(axis, about_point)
+
+    # override the move_to method such that the anchor is the input and not center point
+    def move_to(self, position):
+        """Move the splitter so that its input point is placed at ``position``.
+
+        This overrides the base :meth:`Group.move_to` behavior, which typically uses
+        the element's center as the anchor. Here, the splitter is translated such
+        that :attr:`input_point` is moved to ``position``, and all other points are
+        shifted accordingly.
+
+        Parameters
+        ----------
+        position :
+            Target location for the input point. May be an object with a
+            ``center`` attribute or an array-like ``(x, y)`` coordinate.
+        """
+        # resolve position
+        pos = position.center if hasattr(position, "center") else np.asarray(position)
+
+        # compute shift vector from current input position to new position
+        shift_vec = pos - self.input_point.center
+
+        # apply shift to the whole splitter
+        # (delegates to Fiber.shift, which updates the points)
+        return self.shift(shift_vec)
 
     # Drawing: draw both fibers and optionally the markers
     def _get_mpl_artist(self):
@@ -496,12 +538,26 @@ class FiberSplitter(Group):
             ax.add_patch(self.out_a_point._get_mpl_artist())
         if self._show_out_b:
             ax.add_patch(self.out_b_point._get_mpl_artist())
+        if self._show_labels:
+            from ._annotations import Label
+
+            A = self._axis
+
+            # add labels to the corner points
+            point_labels = Group(
+                [
+                    Label(self.input_point, -A, "input", c=self.input_point.color),
+                    Label(self.out_a_point, A, "out_a", c=self.out_a_point.color),
+                    Label(self.out_b_point, A, "out_b", c=self.out_b_point.color),
+                ]
+            )
+            point_labels.draw(ax)
 
 
 class FiberCoupler(Group):
     """
     Coupler between 2 channels (2 inputs, 2 outputs)
-    
+
     Implemented as a Group of 4 Fibers to be able to independently control the center
     separation (distance between the midpoints of the two channels) without affecting the
     overall geometry defined by the input/output positions.
@@ -580,6 +636,7 @@ class FiberCoupler(Group):
 
         # fibers list for the Group
         elements = [fa1, fa2, fb1, fb2]
+        self._show_labels = False  # controls visibility of internal labels
         self.fiber_a1, self.fiber_a2, self.fiber_b1, self.fiber_b2 = elements
 
         # initialize Group with the four fiber segments
@@ -597,6 +654,7 @@ class FiberCoupler(Group):
         self._show_in_b = False
         self._show_out_a = False
         self._show_out_b = False
+        self._show_labels = False  # for debugging
 
     def _update_geometry(self):
         """
@@ -636,7 +694,7 @@ class FiberCoupler(Group):
 
         # Manually move the start points of fiber_a2 and fiber_b2 to match the mid points.
         # These start_point attributes are separate Point instances created when the Fiber
-        # objects were initialized; they do not share references with mid_a_point or 
+        # objects were initialized; they do not share references with mid_a_point or
         # mid_b_point.
         # Because of this, they are not updated by the midpoint transforms and must be
         # synchronized here. We cannot simply reuse the same Point objects for both roles,
@@ -755,6 +813,22 @@ class FiberCoupler(Group):
         self._axis_transverse = get_normal_vector(self._axis)
         return super().flip(axis, about_point)
 
+    def show_labels(self):
+        """Display labels to the corner points for debugging.
+
+        These labels are only rendered when the element is drawn, and are not part of the
+        element's geometry or layout. They are intended for debugging and visualization
+        purposes.
+
+        Returns
+        -------
+        self
+            The instance itself (for chaining).
+        """
+        self._show_labels = True
+
+        return self
+
     # --- Drawing: draw fibers (Group.draw covers fibers) and optional corner dots
     def _get_mpl_artist(self):
         return None
@@ -771,3 +845,18 @@ class FiberCoupler(Group):
             ax.add_patch(self.out_a_point._get_mpl_artist())
         if self._show_out_b:
             ax.add_patch(self.out_b_point._get_mpl_artist())
+        if self._show_labels:
+            from ._annotations import Label
+
+            A = self._axis
+
+            # add labels to the corner points
+            point_labels = Group(
+                [
+                    Label(self.in_a_point, -A, "in_a", c=self.in_a_point.color),
+                    Label(self.in_b_point, -A, "in_b", c=self.in_b_point.color),
+                    Label(self.out_a_point, A, "out_a", c=self.out_a_point.color),
+                    Label(self.out_b_point, A, "out_b", c=self.out_b_point.color),
+                ]
+            )
+            point_labels.draw(ax)

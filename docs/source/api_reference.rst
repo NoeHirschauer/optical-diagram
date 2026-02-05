@@ -1,5 +1,8 @@
-``optical_diagram`` reference
-=============================
+API reference
+=============
+
+
+.. We need to change the current module to the base module as these classes are not imported into the main module. Otherwise, they won't be included in the API reference.
 
 .. currentmodule:: optical_diagram._base
 
@@ -15,6 +18,9 @@ Base Classes
 
    OpticalElement
    OpticalSystem
+
+
+.. On to the rest of the API reference, we change back to the main module so that the classes are documented under the main module instead of the submodules.
 
 .. currentmodule:: optical_diagram
 
