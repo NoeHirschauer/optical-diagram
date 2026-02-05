@@ -1,12 +1,30 @@
+
+import sys
+import os
+
+import matplotlib
+matplotlib.use('Qt5Agg')  # ou 'TkAgg'
+import matplotlib.pyplot as plt
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+
 from optical_diagram import (
     OpticalTable,
     ConvergingLens,
-    PlaneMirror,
     Point,
     RayTracedBeam,
     Plane,
     Label,
-    UP, DOWN, LEFT, RIGHT,
+    Arrow,
+    UP, 
+    DOWN, 
+    LEFT, 
+    RIGHT,
+    DR,
+    DL,
+    UL,
+    UR
 )
 
 # Créer une table optique
@@ -15,15 +33,19 @@ table.show_grid(visible=True, alpha=0.3)
 
 # Définir la position de départ
 start_position = (1, 3)
+dist_leds = 1
+
+
 
 # Créer un plan matrice de leds
-leds_plane = Plane(start_position, size=2, color="gray")
+leds_plane = Plane(start_position, size=dist_leds*2, color="gray")
 table.add(leds_plane)
 
 # Créer des points sources
-l0 = Point(start_position, size=0.05, color="black")
-l1 = Point(start_position, size=0.05, color="black").shift(1 * UP)
-l2 = Point(start_position, size=0.05, color="black").shift(1 * DOWN)
+
+l0 = Point(start_position, size=0.05, color="black", facecolor="black")
+l1 = Point(start_position, size=0.05, color="black", facecolor="black").shift(dist_leds * UP)
+l2 = Point(start_position, size=0.05, color="black", facecolor="black").shift(dist_leds * DOWN)
 table.add(l0, l1, l2)
 
 
@@ -40,22 +62,13 @@ table.add(obj_plane)
 
 # Créer des points sources
 defocus = 0.5
-p0 = Point(focal_plane_center, size=0.05, color="red")
-p2 = Point(focal_plane_center+defocus*LEFT, size=0.05, color="blue")
+p0 = Point(focal_plane_center, size=0.05, color="red", facecolor="red")
+p2 = Point(focal_plane_center+defocus*LEFT, size=0.05, color="blue", facecolor="blue")
 
 # Créer un point source virtuel sur le plan objet
-
-p1 = Point(focal_plane_center, size=0.05, color="blue", alpha=0.5).shift(0.4 * UP)
+delta_x = defocus / (focal_plane_center[0]-defocus-start_position[0]) * dist_leds
+p1 = Point(focal_plane_center, size=0.05, color="blue", facecolor="blue", alpha=0.5).shift(delta_x * UP)
 table.add(p0, p1, p2)
-
-
-
-# Créer des faisceaux de rayons
-beam0 = RayTracedBeam((l0, p0), initial_width=0.03, divergence=0, color=p0.color)
-beam1 = RayTracedBeam((l2, p1), initial_width=0.03, divergence=0, color=p1.color)
-table.add(beam0, beam1)
-
-
 
 
 # Créer une lentille convergente
@@ -68,41 +81,41 @@ image_plane = Plane(lens2.center + lens2.focal_length * RIGHT, size=2, color="bl
 table.add(image_plane)
 
 # Créer des faisceaux de rayons
-beam2 = RayTracedBeam((p0, lens1, lens2, image_plane), initial_width=0.03, divergence=0, color=p0.color)
-beam3 = RayTracedBeam((p1, lens1, lens2, image_plane), initial_width=0.03, divergence=0, color=p1.color)
+beam2 = RayTracedBeam((l2, p0, lens1, lens2, image_plane), initial_width=0.03, divergence=0, color=p0.color)
+beam3 = RayTracedBeam((l2, p2, lens1, lens2, image_plane), initial_width=0.03, divergence=0, color=p1.color)
 table.add(beam2, beam3)
 
 table.auto_scale()
 
 # Ajouter des étiquettes
 table.add(
-    Label(leds_plane, (0, -1), "Plan de LEDs", fontsize="small"),
-    Label(obj_plane, (0, -1), "Plan Objet", fontsize="small"),
-    Label(lens1, (0, -1), "$L_1$", fontsize="small"),
-    Label(lens2, (0, -1), "$L_2$", fontsize="small"),
-    Label(image_plane, (0, -1), "Plan Image", fontsize="small"),
+    Label(leds_plane, DOWN, "Plan de LEDs", fontsize="small"),
+    Label(obj_plane, DOWN, "Plan Objet", fontsize="small"),
+    Label(lens1, DOWN, "$Obj$", fontsize="small"),
+    Label(lens2, DOWN, "$L_2$", fontsize="small"),
+    Label(image_plane, DOWN, "Plan Image", fontsize="small"),
+    Label(p0, 0.5*DR, "P_{f}", color="red", fontsize="small"),
+    Label(p1, 0.5*UR, "P_{v}", color="blue", fontsize="small"),
+    Label(p2, 0.5*DL, "P_{d}", color="blue", fontsize="small")
 )
 
 # Ajouter des flèches annotées
-arrow1 = FancyArrowPatch(
-    posA=leds_plane.center,
-    posB=lens1.center,
-    arrowstyle="->",
-    color="green",
-    mutation_scale=15,
-    lw=1.5,
-)
-table.ax.add_patch(arrow1)
+arrow1 = Arrow(start=p0, end=p2, color="purple").shift(0.1*DOWN)
+arrow2 = Arrow(start=p1, end=p0, color="purple").shift(0.1*RIGHT)
+arrow3 = Arrow(start=l0, end=l2, color="purple").shift(0.1*LEFT)
+arrow4 = Arrow(start=l0, end=p2, color="purple").shift(0.1*UP)
 
-# Ajouter une annotation textuelle à la flèche
-table.ax.annotate(
-    "Direction de la lumière",
-    xy=(lens1.center[0], lens1.center[1]),
-    xytext=(leds_plane.center[0] + 0.5, leds_plane.center[1] + 0.5),
-    arrowprops=dict(arrowstyle="->", color="green", lw=1.5),
-    fontsize="small",
-    color="green",
-)
+table.add(arrow1, arrow2, arrow3, arrow4)
+
+# Ajouter des labels aux flèches
+table.add(Label(arrow1, 0.5 * DOWN, "\Delta z", color="purple", fontsize="small"),
+          Label(arrow2, 0.5 * RIGHT, "\Delta x_o", color="purple", fontsize="small"),
+          Label(arrow3, 0.5 * LEFT, "d", color="purple", fontsize="small"),
+          Label(arrow4, 0.5 * UP, "L", color="purple", fontsize="small"),
+          )
+
+
+
 
 # Masquer les graduations des axes
 table.hide_ticks()

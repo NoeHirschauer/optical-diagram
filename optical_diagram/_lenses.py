@@ -77,7 +77,7 @@ class ConvergingLens(_Lens):
         if focal_length is not None and focal_length <= 0:
             raise ValueError("Focal length for a converging lens must be positive.")
 
-        kwargs.setdefault("arrowstyle", "<->,head_width=5,head_length=5")
+        kwargs.setdefault("arrowstyle", "<->, head_width=5, head_length=5")
         super().__init__(position or (0, 0), size, angle, focal_length, **kwargs)
 
 

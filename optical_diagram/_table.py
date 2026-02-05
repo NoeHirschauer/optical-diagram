@@ -3,6 +3,8 @@ from typing import Literal
 import matplotlib.pyplot as plt
 import numpy as np
 
+from ._annotations import Point
+
 from ._base import OpticalElement
 from ._beams import RayTracedBeam
 
@@ -88,13 +90,14 @@ class OpticalTable:
 
         for beam in beams:
             for el in beam.elements:
-                beam_position = beam.get_intersection_with(el)  # ensure intersections are computed
-                top = el.center[1] + el.size / 2
-                bot = el.center[1] - el.size / 2
-                if beam_position[1] > top:
-                    el.size = 2*(beam_position[1]+el.center[1]) * 1.5
-                if beam_position[1] < bot:
-                    el.size = 2*(el.center[1]-beam_position[1]) * 1.5
+                if not isinstance(el, Point):
+                    beam_position = beam.get_intersection_with(el)  # ensure intersections are computed
+                    top = el.center[1] + el.size / 2
+                    bot = el.center[1] - el.size / 2
+                    if beam_position[1] > 0.95*top:
+                        el.size = 2*(beam_position[1]-el.center[1]) * 1.3
+                    if beam_position[1] < 1.1*bot:
+                        el.size = 2*(el.center[1]-beam_position[1]) * 1.3
                     
         return self
 

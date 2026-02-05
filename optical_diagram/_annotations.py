@@ -1,8 +1,14 @@
 import numpy as np
 from matplotlib.patches import Circle, FancyArrowPatch
 from matplotlib.patches import Polygon as MplPolygon
+from pylatexenc.latex2text import LatexNodes2Text
 
 from ._base import DOWN, LEFT, ORIGIN, RIGHT, OpticalElement
+
+
+# Activer le rendu LaTeX
+import matplotlib.pyplot as plt
+plt.rcParams['font.family'] = 'serif'
 
 __all__ = [
     "Plane",
@@ -152,7 +158,7 @@ class Label(OpticalElement):
         return ax.text(
             self.center[0],
             self.center[1],
-            self.text,
+            LatexNodes2Text().latex_to_text(self.text),
             color=color,
             rotation=self._angle,
             **style,
@@ -178,9 +184,10 @@ class Arrow(OpticalElement):
         angle = np.degrees(np.arctan2(delta[1], delta[0]))
 
         kwargs.setdefault("color", "black")
-        kwargs.setdefault("arrowstyle", "->")
+        kwargs.setdefault("arrowstyle", "<->, head_width=1, head_length=1")
         kwargs.setdefault("linewidth", 1.5)
         kwargs.setdefault("zorder", 10)
+
 
         super().__init__(center, dist, angle, **kwargs)
 
