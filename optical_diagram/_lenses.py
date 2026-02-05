@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib.patches import FancyArrowPatch
 
-from ._base import OpticalSystem
+from ._base import ORIGIN, OpticalSystem
 
 __all__ = ["ConvergingLens", "DivergingLens"]
 
@@ -72,23 +72,23 @@ class _Lens(OpticalSystem):
 class ConvergingLens(_Lens):
     """A converging lens represented by an outwards pointing double-headed arrow."""
 
-    def __init__(self, position=None, size=1, angle=0, focal_length=None, **kwargs):
+    def __init__(self, position=ORIGIN, size=1, angle=0, focal_length=None, **kwargs):
         # make sure that the focal is positive
         if focal_length is not None and focal_length <= 0:
             raise ValueError("Focal length for a converging lens must be positive.")
 
         kwargs.setdefault("arrowstyle", "<->,head_width=5,head_length=5")
-        super().__init__(position or (0, 0), size, angle, focal_length, **kwargs)
+        super().__init__(position, size, angle, focal_length, **kwargs)
 
 
 class DivergingLens(_Lens):
     """A diverging lens represented by an inwards pointing double-headed arrow."""
 
-    def __init__(self, position=None, size=1, angle=0, focal_length=None, **kwargs):
+    def __init__(self, position=ORIGIN, size=1, angle=0, focal_length=None, **kwargs):
         # make sure that the focal is negative
         if focal_length is not None and focal_length >= 0:
             raise ValueError("Focal length for a diverging lens must be negative.")
 
         kwargs.setdefault("arrowstyle", "<->,head_width=5,head_length=5")
         kwargs.setdefault("mutation_scale", -1)
-        super().__init__(position or (0, 0), size, angle, focal_length, **kwargs)
+        super().__init__(position, size, angle, focal_length, **kwargs)

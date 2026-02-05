@@ -53,6 +53,8 @@ Fibers & Waveguides
    :nosignatures:
 
    Fiber
+   FiberSplitter
+   FiberCoupler
 
 Beams & Ray Tracing
 -------------------
@@ -103,6 +105,7 @@ Helpers & Utilities
    :template: autosummary/function.rst
    :nosignatures:
 
+   Group
    get_axis_direction
    get_normal_direction
    get_normal_vector
