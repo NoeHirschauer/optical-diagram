@@ -306,7 +306,6 @@ class FiberSplitter(Group):
         self._show_out_b = False
         self._show_labels = False  # controls optional debug/annotation labels on splitter points
 
-    # similar to the Fiber class, we override the color property to ensure it is applied to everything
     @property
     def color(self):
         """Shorthand color. Proxies to the internal fibers' color."""
@@ -620,9 +619,7 @@ class FiberCoupler(Group):
         """
         # style defaults
         kwargs.setdefault("facecolor", "none")
-        kwargs.setdefault("edgecolor", "C0")
-        if "color" in kwargs:
-            kwargs["edgecolor"] = kwargs.pop("color")
+        kwargs.setdefault("color", "C0")
 
         # resolve center
         center = (
@@ -679,6 +676,9 @@ class FiberCoupler(Group):
         # initialize Group with the four fiber segments
         super().__init__(elements, **kwargs)
 
+        if "color" in kwargs:
+            self.color = kwargs.pop("color")
+
         # store geometry state
         self._axis = axis
         self._axis_transverse = axis_transverse
@@ -692,6 +692,18 @@ class FiberCoupler(Group):
         self._show_out_a = False
         self._show_out_b = False
         self._show_labels = False  # for debugging
+
+    @property
+    def color(self):
+        """Shorthand color. Proxies to the internal fibers' color."""
+        return self.fiber_a1.color  # both fibers should have the same color
+
+    @color.setter
+    def color(self, value):
+        self.fiber_a1.color = value
+        self.fiber_a2.color = value
+        self.fiber_b1.color = value
+        self.fiber_b2.color = value
 
     def _update_geometry(self):
         """
