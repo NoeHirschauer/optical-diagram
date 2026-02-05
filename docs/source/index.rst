@@ -13,4 +13,4 @@
 
    _autoexamples/index
    api_reference
-
+   releases
