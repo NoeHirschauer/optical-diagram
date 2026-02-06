@@ -30,6 +30,7 @@ from ._annotations import (
     Point,
     OpticalAxis,
     Label,
+    Arrow,
     Rectangle,
     SurroundingRectangle,
 )
@@ -63,6 +64,7 @@ __all__ = [
     "Point",
     "OpticalAxis",
     "Label",
+    "Arrow",
     "Rectangle",
     "SurroundingRectangle",
     

@@ -104,6 +104,14 @@ class OpticalElement(ABC):
         self._center = np.asarray(value, dtype=float)
 
     @property
+    def size(self):
+        return self._size
+    
+    @size.setter
+    def size(self, value):
+        self._size = float(value)
+
+    @property
     def x(self):
         """float: The current x-coordinate of the element's center."""
         return self._center[0]
@@ -112,11 +120,6 @@ class OpticalElement(ABC):
     def y(self):
         """float: The current y-coordinate of the element's center."""
         return self._center[1]
-
-    @property
-    def size(self):
-        """float: The current characteristic size of the element."""
-        return self._size
 
     @property
     def angle(self):
