@@ -598,6 +598,37 @@ class Group(OpticalElement):
         super().__init__(position=group_center, size=2 * max_dist, angle=0.0, **kwargs)
         self.elements = elements
 
+    def add(self, *elements):
+        """Add one or more elements to the group and update its geometry.
+
+        This method appends the given elements to ``self.elements`` and then
+        recomputes the group's center and size based on all contained elements.
+        The new center is taken as the centroid of the element centers, and the
+        size is updated to twice the maximum distance from the center to any
+        corner of any element's boundary box.
+
+        Parameters
+        ----------
+        *elements
+            One or more :class:`OpticalElement` instances to be added to the
+            group.
+        """
+        self.elements.extend(elements)
+        
+        # Recompute center and size
+        centers = np.array([el.center for el in self.elements])
+        self.center = np.mean(centers, axis=0)
+
+        max_dist = 0.0
+        for el in self.elements:
+            min_x, min_y, max_x, max_y = el.get_boundary_box()
+            corners = np.array(
+                [[min_x, min_y], [min_x, max_y], [max_x, min_y], [max_x, max_y]]
+            )
+            dists = np.linalg.norm(corners - self.center, axis=1)
+            max_dist = max(max_dist, np.max(dists))
+        self._size = 2 * max_dist
+
     def _get_mpl_artist(self):
         # Groups do not have a direct artist; they render their elements instead.
         raise NotImplementedError("Group does not have a direct matplotlib artist.")

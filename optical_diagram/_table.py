@@ -53,9 +53,9 @@ class OpticalTable:
         )
         self.ax.set_title(title)
 
-        # Set limits
-        self.ax.set_xlim(0, self.w)
-        self.ax.set_ylim(0, self.h)
+        # Set limits to center the origin
+        self.ax.set_xlim(-self.w / 2, self.w / 2)
+        self.ax.set_ylim(-self.h / 2, self.h / 2)
         self.ax.set_aspect("equal")
 
         # Config axes labels
@@ -87,8 +87,8 @@ class OpticalTable:
         """
         if visible:
             self.ax.grid(visible, alpha=alpha)
-            self.ax.set_xticks(np.arange(0, self.w + 1, 1))
-            self.ax.set_yticks(np.arange(0, self.h + 1, 1))
+            self.ax.set_xticks(np.arange(-self.w / 2, self.w / 2 + 1, 1))
+            self.ax.set_yticks(np.arange(-self.h / 2, self.h / 2 + 1, 1))
         return self
 
     def hide_ticks(self):
@@ -142,8 +142,11 @@ class OpticalTable:
     def show(self):
         """Render and display the plot."""
         self.render()
-        self.fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-        plt.tight_layout()
+
+        self.fig.tight_layout()
+        # force the limits to crop to the specified size, even if elements are beyond it
+        self.ax.set_xlim(-self.w / 2, self.w / 2)
+        self.ax.set_ylim(-self.h / 2, self.h / 2)
         plt.show()
 
     def save(self, filename, dpi=400):

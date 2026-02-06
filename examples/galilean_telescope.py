@@ -1,12 +1,16 @@
 """
+.. currentmodule:: optical_diagram
+
 Galilean telescope (afocal) example
 ===================================
 
-A minimal  example showing a Galilean telescope:
+A minimal  example showing a Galilean telescope.
 
-- Large converging objective (long focal length)
-- Shorter negative-focal diverging eyepiece
-- A RayTracedBeam propagating through the system for on-axis and off-axis collimated sources
+The setup consists of:
+
+- a large converging objective (`ConvergingLens` element)
+- a shorter negative-focal diverging eyepiece (`DivergingLens` element)
+- a `RayTracedBeam` propagating through the system for on-axis and off-axis collimated sources
 
 This script is intentionally verbose in comments to demonstrate how to declare
 and initialize every OpticalElement used.
@@ -54,7 +58,7 @@ _labels = []
 
 diameter = diagram_size[1] * 0.5  # 50% of table height
 
-object_plane = Plane(position=(2, 3), size=diameter)
+object_plane = Plane(position=(-4, 0), size=diameter)
 
 objective_f = 4.0  # focal length of objective (units consistent with table)
 objective = ConvergingLens(size=diameter, focal_length=objective_f).next_to(

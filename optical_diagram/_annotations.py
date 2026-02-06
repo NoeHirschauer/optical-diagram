@@ -51,6 +51,33 @@ class Point(OpticalElement):
         # size=0.1 defines the visual diameter of the dot.
         super().__init__(position, size=size, angle=0.0, **kwargs)
 
+    # override the color property to ensure it sets both edge and face color for the dot
+    @property
+    def color(self):
+        """Shorthand color proxy.
+        
+        Defaults to `color`
+        """
+        return self._style.get("color")
+    
+    @color.setter
+    def color(self, value):
+        """Set shorthand color for the point.
+        
+        Removes any existing facecolor/edgecolor to avoid conflicts, and sets the
+        overall color for the dot. If value is None, it clears all color settings.
+        """
+        if value is None:
+            self._style.pop("color", None)
+            self._style.pop("edgecolor", None)
+            self._style.pop("facecolor", None)
+        else:
+            # we remove edgecolor/facecolor to not raise warnings about conflicts
+            # (matplotlib will warn if both color and edgecolor/facecolor are set)
+            self._style.pop("edgecolor", None)
+            self._style.pop("facecolor", None)
+            self._style["color"] = value
+
     def get_local_points(self):
         # A point has no extent, but provides the center for the artist
         return np.array([[0, 0]])
