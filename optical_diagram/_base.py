@@ -55,14 +55,14 @@ class OpticalElement(ABC):
     """
 
     def __init__(self, position: np.ndarray | tuple[float, float] = ORIGIN, size=1.0, angle=0.0, **kwargs):
-        position = np.asarray(position, dtype=float)
+        
         
         if isinstance(position, OpticalElement):
-            _position = position.center
+            _position = np.asarray(position.center, dtype=float)
         else:
-            _position = position
+            _position = np.asarray(position, dtype=float)
 
-        self._center = np.asarray(_position, dtype=float).ravel()
+        self._center = _position.ravel()
         if self._center.size != 2:
             raise ValueError("Position must be a length-2 sequence.")
 
