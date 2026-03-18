@@ -1,4 +1,13 @@
 
+"""
+FPM : Fourier Ptychographic Microscopy
+---------------------------------------------------------------------------------------------
+This code snippet demonstrates how to create an optical diagram to illustrate the 
+parallax effect in Fourier Ptychographic Microscopy (FPM) using the `optical_diagram` library. 
+The diagram includes a plane of LEDs, a converging lens, an object plane, and an image plane, 
+along with ray tracing to show the paths of light from the LEDs through the system. 
+Labels and arrows are added for clarity.
+"""
 
 import matplotlib
 matplotlib.rcParams['font.family'] = 'serif'
