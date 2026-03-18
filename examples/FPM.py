@@ -1,12 +1,8 @@
 
-import sys
-import os
 
 import matplotlib
-matplotlib.use('Qt5Agg')  # ou 'TkAgg'
-import matplotlib.pyplot as plt
-
-
+matplotlib.rcParams['font.family'] = 'serif'
+matplotlib.rcParams['font.serif'] = ['Times New Roman']  # or any other serif font
 
 from optical_diagram import (
     OpticalTable,
