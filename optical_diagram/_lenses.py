@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib.patches import FancyArrowPatch
 
-from ._base import OpticalSystem
+from ._base import ORIGIN, OpticalSystem
 
 __all__ = ["ConvergingLens", "DivergingLens"]
 
