@@ -89,14 +89,14 @@ class RayTracedBeam(OpticalElement):
     focal length.
     """
 
-    def __init__(self, elements, initial_width=0, divergence=0.0, **kwargs):
+    def __init__(self, elements, initial_width=0.0, divergence=0.0, **kwargs):
         """
         Parameters
         ----------
         elements : iterable of OpticalElement
             The sequence of optical elements the beam passes through.
-        initial_width : int, optional
-            The initial width of the beam. Defaults to 0.
+        initial_width : float, optional
+            The initial width of the beam. Defaults to 0.0.
         divergence : float, optional
             The divergence (half-angle) of the beam in degrees. Defaults to 0.0.
         """

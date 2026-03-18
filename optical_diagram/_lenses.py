@@ -73,9 +73,14 @@ class ConvergingLens(_Lens):
     """A converging lens represented by an outwards pointing double-headed arrow."""
 
     def __init__(self, position=None, size=1, angle=0, focal_length=None, **kwargs):
-        # make sure that the focal is positive
-        if focal_length is not None and focal_length <= 0:
-            raise ValueError("Focal length for a converging lens must be positive.")
+
+        #make sure that the focal exists
+        if focal_length is None:
+            raise ValueError("Focal length must be specified for a lens.")
+        else:
+            # make sure that the focal is positive
+            if focal_length <= 0:
+                raise ValueError("Focal length for a converging lens must be positive.")
 
         kwargs.setdefault("arrowstyle", "<->, head_width=5, head_length=5")
         super().__init__(position or np.array([0, 0]), size, angle, focal_length, **kwargs)
@@ -85,9 +90,14 @@ class DivergingLens(_Lens):
     """A diverging lens represented by an inwards pointing double-headed arrow."""
 
     def __init__(self, position=None, size=1, angle=0, focal_length=None, **kwargs):
-        # make sure that the focal is negative
-        if focal_length is not None and focal_length >= 0:
-            raise ValueError("Focal length for a diverging lens must be negative.")
+
+
+        if focal_length is None:
+            raise ValueError("Focal length must be specified for a lens.")
+        else:
+            # make sure that the focal is negative
+            if focal_length >= 0:
+                raise ValueError("Focal length for a diverging lens must be negative.")
 
         kwargs.setdefault("arrowstyle", "<->,head_width=5,head_length=5")
         kwargs.setdefault("mutation_scale", -1)

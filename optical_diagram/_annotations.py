@@ -24,7 +24,7 @@ class Plane(OpticalElement):
     Used for visualization; rays pass through without interaction.
     """
 
-    def __init__(self, position=ORIGIN, size=1.0, angle=0.0, **kwargs):
+    def __init__(self, position: np.ndarray | tuple[float, float] = ORIGIN, size=1.0, angle=0.0, **kwargs):
         # Default Plane is vertical at 0 deg to match Lens/Mirror convention
         kwargs.setdefault("linestyle", "--")
         kwargs.setdefault("color", "gray")
@@ -48,7 +48,7 @@ class Point(OpticalElement):
     Rays pass through its plane without interaction.
     """
 
-    def __init__(self, position=ORIGIN, size=0.1, **kwargs):
+    def __init__(self, position: np.ndarray | tuple[float, float] = ORIGIN, size=0.1, **kwargs):
         # Style for the visual dot
         kwargs.setdefault("color", "black")
         kwargs.setdefault("zorder", 15)

@@ -21,16 +21,16 @@ __all__ = [
 ]
 
 # Constants
-RIGHT = np.array((1.0, 0.0))
-LEFT = np.array((-1.0, 0.0))
-UP = np.array((0.0, 1.0))
-DOWN = np.array((0.0, -1.0))
-ORIGIN = np.array((0.0, 0.0))
+RIGHT : np.ndarray = np.array((1.0, 0.0))
+LEFT : np.ndarray = np.array((-1.0, 0.0))
+UP : np.ndarray = np.array((0.0, 1.0))
+DOWN : np.ndarray = np.array((0.0, -1.0))
+ORIGIN : np.ndarray = np.array((0.0, 0.0))
 
-UR = UP + RIGHT
-UL = UP + LEFT
-DR = DOWN + RIGHT
-DL = DOWN + LEFT
+UR : np.ndarray = UP + RIGHT
+UL : np.ndarray = UP + LEFT
+DR : np.ndarray = DOWN + RIGHT
+DL : np.ndarray = DOWN + LEFT
 
 
 class OpticalElement(ABC):
@@ -54,6 +54,8 @@ class OpticalElement(ABC):
     """
 
     def __init__(self, position: np.ndarray | tuple[float, float] = ORIGIN, size=1.0, angle=0.0, **kwargs):
+        position = np.asarray(position, dtype=float)
+        
         if isinstance(position, OpticalElement):
             _position = position.center
         else:
@@ -546,7 +548,7 @@ class OpticalSystem(OpticalElement):
     Abstract base class for optical elements that can have a focal length.
     """
 
-    def __init__(self, position=ORIGIN, size=1.0, angle=0.0, focal_length=None, **kwargs):
+    def __init__(self, position=ORIGIN, size=1.0, angle=0.0, focal_length: float | None=None, **kwargs):
         self._focal_length = focal_length
         super().__init__(position, size, angle, **kwargs)
 
