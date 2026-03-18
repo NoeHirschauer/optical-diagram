@@ -2,13 +2,17 @@ import numpy as np
 from matplotlib.patches import Circle, FancyArrowPatch
 from matplotlib.patches import Polygon as MplPolygon
 
-from ._base import ORIGIN, OpticalElement
+
+from ._base import DOWN, LEFT, ORIGIN, RIGHT, OpticalElement
+
+
 
 __all__ = [
     "Plane",
     "Point",
     "OpticalAxis",
     "Label",
+    "Arrow",
     "Rectangle",
     "SurroundingRectangle",
 ]
@@ -20,7 +24,7 @@ class Plane(OpticalElement):
     Used for visualization; rays pass through without interaction.
     """
 
-    def __init__(self, position=ORIGIN, size=1.0, angle=0.0, **kwargs):
+    def __init__(self, position: np.ndarray | tuple[float, float] = ORIGIN, size=1.0, angle=0.0, **kwargs):
         # Default Plane is vertical at 0 deg to match Lens/Mirror convention
         kwargs.setdefault("linestyle", "--")
         kwargs.setdefault("color", "gray")
@@ -44,7 +48,7 @@ class Point(OpticalElement):
     Rays pass through its plane without interaction.
     """
 
-    def __init__(self, position=ORIGIN, size=0.1, **kwargs):
+    def __init__(self, position: np.ndarray | tuple[float, float] = ORIGIN, size=0.1, **kwargs):
         # Style for the visual dot
         kwargs.setdefault("color", "black")
         kwargs.setdefault("zorder", 15)
@@ -88,7 +92,7 @@ class Point(OpticalElement):
         if style.get("facecolor") == "none":
             style["facecolor"] = style.get("edgecolor", "k")
 
-        return Circle(self.center, radius=self._size / 2, **style)
+        return Circle(tuple(self.center), radius=self._size / 2, **style)
 
 
 class OpticalAxis(OpticalElement):
@@ -109,7 +113,7 @@ class OpticalAxis(OpticalElement):
         else:
             self._end = np.asarray(end_point)
         center = (self._start + self._end) / 2
-        dist = np.linalg.norm(self._end - self._start)
+        dist = float(np.linalg.norm(self._end - self._start))
 
         # Calculate angle
         delta = self._end - self._start
@@ -184,13 +188,49 @@ class Label(OpticalElement):
             rotation=self._angle,
             **style,
         )
+    
+class Arrow(OpticalElement):
+    """
+    An arrow between two points or elements.
+    """
+    def __init__(self, start, end, **kwargs):
+        
+        self.start = (
+            start.center if hasattr(start, "center") else np.asarray(start)
+        )
+        self.end = (
+            end.center if hasattr(end, "center") else np.asarray(end)
+        )
+        center = (self.start + self.end) / 2
+        dist = float(np.linalg.norm(self.end - self.start))
+
+        # Calculate angle
+        delta = self.end - self.start
+        angle = np.degrees(np.arctan2(delta[1], delta[0]))
+
+        kwargs.setdefault("color", "black")
+        kwargs.setdefault("arrowstyle", "<->, head_width=1, head_length=1")
+        kwargs.setdefault("linewidth", 1.5)
+        kwargs.setdefault("zorder", 10)
+
+
+        super().__init__(center, dist, angle, **kwargs)
+
+    def get_local_points(self):
+        h = self._size / 2.0
+        return np.array([[-h, 0], [h, 0]])
+
+    def _get_mpl_artist(self):
+        pts = self.get_critical_points()
+        style = self._style.copy()
+        return FancyArrowPatch(pts[0], pts[1], **style)
 
 
 class Rectangle(OpticalElement):
     """
     A rectangle represented by a polygon, defined by width and height.
     """
-    def __init__(self, position=ORIGIN, width=1.0, height=1.0, angle=0.0, **kwargs):
+    def __init__(self, position=ORIGIN, width=1, height=1, angle=0.0, **kwargs):
         self.width = float(width)
         self.height = float(height)
         super().__init__(position, size=max(width, height), angle=angle, **kwargs)

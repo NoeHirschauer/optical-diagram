@@ -22,16 +22,16 @@ __all__ = [
 ]
 
 # Constants
-RIGHT = np.array((1.0, 0.0))
-LEFT = np.array((-1.0, 0.0))
-UP = np.array((0.0, 1.0))
-DOWN = np.array((0.0, -1.0))
-ORIGIN = np.array((0.0, 0.0))
+RIGHT : np.ndarray = np.array((1.0, 0.0))
+LEFT : np.ndarray = np.array((-1.0, 0.0))
+UP : np.ndarray = np.array((0.0, 1.0))
+DOWN : np.ndarray = np.array((0.0, -1.0))
+ORIGIN : np.ndarray = np.array((0.0, 0.0))
 
-UR = UP + RIGHT
-UL = UP + LEFT
-DR = DOWN + RIGHT
-DL = DOWN + LEFT
+UR : np.ndarray = UP + RIGHT
+UL : np.ndarray = UP + LEFT
+DR : np.ndarray = DOWN + RIGHT
+DL : np.ndarray = DOWN + LEFT
 
 
 class OpticalElement(ABC):
@@ -54,13 +54,15 @@ class OpticalElement(ABC):
         Style arguments passed to the matplotlib patch (color, alpha, etc).
     """
 
-    def __init__(self, position=ORIGIN, size=1, angle=0.0, **kwargs):
+    def __init__(self, position: np.ndarray | tuple[float, float] = ORIGIN, size=1.0, angle=0.0, **kwargs):
+        
+        
         if isinstance(position, OpticalElement):
-            _position = position.center
+            _position = np.asarray(position.center, dtype=float)
         else:
-            _position = position
+            _position = np.asarray(position, dtype=float)
 
-        self._center = np.asarray(_position, dtype=float).ravel()
+        self._center = _position.ravel()
         if self._center.size != 2:
             raise ValueError("Position must be a length-2 sequence.")
 
@@ -104,6 +106,15 @@ class OpticalElement(ABC):
         self._center = np.asarray(value, dtype=float)
 
     @property
+    def size(self):
+        """float: The current size of the element (e.g., diameter for lens)."""
+        return self._size
+    
+    @size.setter
+    def size(self, value):
+        self._size = float(value)
+
+    @property
     def x(self):
         """float: The current x-coordinate of the element's center."""
         return self._center[0]
@@ -112,11 +123,6 @@ class OpticalElement(ABC):
     def y(self):
         """float: The current y-coordinate of the element's center."""
         return self._center[1]
-
-    @property
-    def size(self):
-        """float: The current characteristic size of the element."""
-        return self._size
 
     @property
     def angle(self):
@@ -543,7 +549,7 @@ class OpticalSystem(OpticalElement):
     Abstract base class for optical elements that can have a focal length.
     """
 
-    def __init__(self, position=ORIGIN, size=1, angle=0.0, focal_length=None, **kwargs):
+    def __init__(self, position=ORIGIN, size=1.0, angle=0.0, focal_length: float | None=None, **kwargs):
         self._focal_length = focal_length
         super().__init__(position, size, angle, **kwargs)
 

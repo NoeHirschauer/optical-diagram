@@ -2,8 +2,12 @@ from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
+from requests import patch
+
+from ._annotations import Point
 
 from ._base import OpticalElement
+from ._beams import RayTracedBeam
 
 
 class OpticalTable:
@@ -76,6 +80,28 @@ class OpticalTable:
             else:
                 raise TypeError(f"Expected OpticalElement, got {type(el)}")
         return self
+    
+    def auto_scale(self):
+        """Resize all elements on the table to fit raytraced beams."""
+        # Find all RayTracedBeams
+        beams: list[RayTracedBeam]
+        beams = [el for el in self.elements if isinstance(el, RayTracedBeam)]
+        if not beams:
+            return self  # nothing to do
+
+        for beam in beams:
+            for el in beam.elements:
+                if not isinstance(el, Point):
+                    beam_position = beam.get_intersection_with(el)  # ensure intersections are computed
+                    if beam_position is not None:
+                        top = el.center[1] + el.size / 2
+                        bot = el.center[1] - el.size / 2
+                        if beam_position[1] > 0.95*top:
+                            el.size = 2*(beam_position[1]-el.center[1]) * 1.3
+                        if beam_position[1] < 1.1*bot:
+                            el.size = 2*(el.center[1]-beam_position[1]) * 1.3
+                    
+        return self
 
     def show_grid(self, visible=True, alpha=0.2):
         """Toggle the background grid.
@@ -124,15 +150,17 @@ class OpticalTable:
         self
             The instance itself (for chaining).
         """
-        self.ax.set_xlabel(None)
-        self.ax.set_ylabel(None)
+        self.ax.set_xlabel("")
+        self.ax.set_ylabel("")
         return self
 
     def render(self):
         """Draws all elements to the axes. Called automatically by show()."""
         # Clear existing patches to avoid duplicates if called multiple times
         try:
-            self.ax.patches.clear()
+            for patch in self.ax.patches[:]:
+                patch.remove()
+
         except AttributeError:
             pass
 
