@@ -78,7 +78,7 @@ class ConvergingLens(_Lens):
             raise ValueError("Focal length for a converging lens must be positive.")
 
         kwargs.setdefault("arrowstyle", "<->, head_width=5, head_length=5")
-        super().__init__(position or (0, 0), size, angle, focal_length, **kwargs)
+        super().__init__(position or np.array([0, 0]), size, angle, focal_length, **kwargs)
 
 
 class DivergingLens(_Lens):
@@ -91,4 +91,4 @@ class DivergingLens(_Lens):
 
         kwargs.setdefault("arrowstyle", "<->,head_width=5,head_length=5")
         kwargs.setdefault("mutation_scale", -1)
-        super().__init__(position or (0, 0), size, angle, focal_length, **kwargs)
+        super().__init__(position or np.array([0, 0]), size, angle, focal_length, **kwargs)

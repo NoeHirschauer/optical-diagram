@@ -6,7 +6,6 @@ import matplotlib
 matplotlib.use('Qt5Agg')  # ou 'TkAgg'
 import matplotlib.pyplot as plt
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 from optical_diagram import (
@@ -91,12 +90,12 @@ table.auto_scale()
 table.add(
     Label(leds_plane, DOWN, "Plan de LEDs", fontsize="small"),
     Label(obj_plane, DOWN, "Plan Objet", fontsize="small"),
-    Label(lens1, DOWN, "$Obj$", fontsize="small"),
-    Label(lens2, DOWN, "$L_2$", fontsize="small"),
+    Label(lens1, DOWN, r"$Obj$", fontsize="small"),
+    Label(lens2, DOWN, r"$L_2$", fontsize="small"),
     Label(image_plane, DOWN, "Plan Image", fontsize="small"),
-    Label(p0, 0.5*DR, "P_{f}", color="red", fontsize="small"),
-    Label(p1, 0.5*UR, "P_{v}", color="blue", fontsize="small"),
-    Label(p2, 0.5*DL, "P_{d}", color="blue", fontsize="small")
+    Label(p0, 0.5*DR, r"$P_{f}$", color="red", fontsize="small"),
+    Label(p1, 0.5*UR, r"$P_{v}$", color="blue", fontsize="small"),
+    Label(p2, 0.5*DL, r"$P_{d}$", color="blue", fontsize="small")
 )
 
 # Ajouter des flèches annotées
@@ -108,10 +107,10 @@ arrow4 = Arrow(start=l0, end=p2, color="purple").shift(0.1*UP)
 table.add(arrow1, arrow2, arrow3, arrow4)
 
 # Ajouter des labels aux flèches
-table.add(Label(arrow1, 0.5 * DOWN, "\Delta z", color="purple", fontsize="small"),
-          Label(arrow2, 0.5 * RIGHT, "\Delta x_o", color="purple", fontsize="small"),
-          Label(arrow3, 0.5 * LEFT, "d", color="purple", fontsize="small"),
-          Label(arrow4, 0.5 * UP, "L", color="purple", fontsize="small"),
+table.add(Label(arrow1, 0.5 * DOWN, r"$\Delta z$", color="purple", fontsize="small"),
+          Label(arrow2, 0.5 * RIGHT, r"$\Delta x_o$", color="purple", fontsize="small"),
+          Label(arrow3, 0.5 * LEFT, r"$d$", color="purple", fontsize="small"),
+          Label(arrow4, 0.5 * UP, r"$L$", color="purple", fontsize="small"),
           )
 
 

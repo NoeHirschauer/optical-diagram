@@ -78,11 +78,18 @@ class Fiber(OpticalElement):
         self.end_point.shift(vector)
         return super().shift(vector)
 
+    def _determine_pivot(self, about_point):
+        """Helper to determine pivot point for rotation/flip."""
+        if about_point is None:
+            return self.center
+        elif hasattr(about_point, "center"):
+            return about_point.center
+        else:
+            return np.asarray(about_point)
+        
     def rotate(self, angle_degrees, about_point=None):
         # Determine pivot
-        pivot = about_point.center if hasattr(about_point, "center") else about_point
-        if pivot is None:
-            pivot = self.center
+        pivot = self._determine_pivot(about_point)
 
         # Rotate endpoints as individual OpticalElements
         self.start_point.rotate(angle_degrees, about_point=pivot)
@@ -96,9 +103,7 @@ class Fiber(OpticalElement):
 
     def flip(self, axis=UP, about_point=None):
         # Determine pivot
-        pivot = about_point.center if hasattr(about_point, "center") else about_point
-        if pivot is None:
-            pivot = self.center
+        pivot = self._determine_pivot(about_point)
 
         # Flip endpoints as individual OpticalElements
         self.start_point.flip(axis=axis, about_point=pivot)

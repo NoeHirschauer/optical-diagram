@@ -58,9 +58,9 @@ class _Mirror(OpticalSystem):
 class PlaneMirror(_Mirror):
     """A flat mirror represented by a straight line."""
 
-    def __init__(self, position=None, size=1, angle=0, **kwargs):
+    def __init__(self, position=None, size=1.0, angle=0, **kwargs):
         if position is None:
-            position = (0.0, 0.0)
+            position = np.array([0.0, 0.0])
         super().__init__(position, size, angle, focal_length=np.inf, **kwargs)
 
     def _get_mpl_artist(self):
@@ -73,12 +73,12 @@ class PlaneMirror(_Mirror):
 class ConcaveMirror(_Mirror):
     """A converging mirror (f > 0) represented by ``]`` (for light coming from the left)."""
 
-    def __init__(self, position=None, size=1, focal_length=None, angle=0.0, **kwargs):
+    def __init__(self, position=None, size=1.0, focal_length=None, angle=0.0, **kwargs):
         # make sure focal_length is positive
         if focal_length is not None and focal_length <= 0:
             raise ValueError("ConcaveMirror must have positive focal_length")
         
-        super().__init__(position or (0, 0), size, angle, focal_length, **kwargs)
+        super().__init__(position or np.array([0, 0]), size, angle, focal_length, **kwargs)
 
     def _get_mpl_artist(self):
         pts = self.get_critical_points()
@@ -90,12 +90,12 @@ class ConcaveMirror(_Mirror):
 class ConvexMirror(_Mirror):
     """A diverging mirror (f < 0) represented by ``[`` (for light coming from the left)."""
 
-    def __init__(self, position=None, size=1, focal_length=None, angle=0.0, **kwargs):
+    def __init__(self, position=None, size=1.0, focal_length=None, angle=0.0, **kwargs):
         # make sure focal_length is negative
         if focal_length is not None and focal_length >= 0:
             raise ValueError("ConvexMirror must have negative focal_length")
         
-        super().__init__(position or (0, 0), size, angle, focal_length, **kwargs)
+        super().__init__(position or np.array([0, 0]), size, angle, focal_length, **kwargs)
 
     def _get_mpl_artist(self):
         pts = self.get_critical_points()

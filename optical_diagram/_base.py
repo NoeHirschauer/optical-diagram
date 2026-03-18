@@ -53,7 +53,7 @@ class OpticalElement(ABC):
         Style arguments passed to the matplotlib patch (color, alpha, etc).
     """
 
-    def __init__(self, position=ORIGIN, size=1, angle=0.0, **kwargs):
+    def __init__(self, position: np.ndarray | tuple[float, float] = ORIGIN, size=1.0, angle=0.0, **kwargs):
         if isinstance(position, OpticalElement):
             _position = position.center
         else:
@@ -104,6 +104,7 @@ class OpticalElement(ABC):
 
     @property
     def size(self):
+        """float: The current size of the element (e.g., diameter for lens)."""
         return self._size
     
     @size.setter
@@ -545,7 +546,7 @@ class OpticalSystem(OpticalElement):
     Abstract base class for optical elements that can have a focal length.
     """
 
-    def __init__(self, position=ORIGIN, size=1, angle=0.0, focal_length=None, **kwargs):
+    def __init__(self, position=ORIGIN, size=1.0, angle=0.0, focal_length=None, **kwargs):
         self._focal_length = focal_length
         super().__init__(position, size, angle, **kwargs)
 

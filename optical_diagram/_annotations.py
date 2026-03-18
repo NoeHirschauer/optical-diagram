@@ -1,20 +1,18 @@
 import numpy as np
 from matplotlib.patches import Circle, FancyArrowPatch
 from matplotlib.patches import Polygon as MplPolygon
-from pylatexenc.latex2text import LatexNodes2Text
+
 
 from ._base import DOWN, LEFT, ORIGIN, RIGHT, OpticalElement
 
 
-# Activer le rendu LaTeX
-import matplotlib.pyplot as plt
-plt.rcParams['font.family'] = 'serif'
 
 __all__ = [
     "Plane",
     "Point",
     "OpticalAxis",
     "Label",
+    "Arrow",
     "Rectangle",
     "SurroundingRectangle",
 ]
@@ -67,7 +65,7 @@ class Point(OpticalElement):
         if style.get("facecolor") == "none":
             style["facecolor"] = style.get("edgecolor", "k")
 
-        return Circle(self.center, radius=self._size / 2, **style)
+        return Circle(tuple(self.center), radius=self._size / 2, **style)
 
 
 class OpticalAxis(OpticalElement):
@@ -88,7 +86,7 @@ class OpticalAxis(OpticalElement):
         else:
             self._end = np.asarray(end_point)
         center = (self._start + self._end) / 2
-        dist = np.linalg.norm(self._end - self._start)
+        dist = float(np.linalg.norm(self._end - self._start))
 
         # Calculate angle
         delta = self._end - self._start
@@ -158,7 +156,7 @@ class Label(OpticalElement):
         return ax.text(
             self.center[0],
             self.center[1],
-            LatexNodes2Text().latex_to_text(self.text),
+            self.text,
             color=color,
             rotation=self._angle,
             **style,
@@ -171,13 +169,13 @@ class Arrow(OpticalElement):
     def __init__(self, start, end, **kwargs):
         
         self.start = (
-            start.center if isinstance(start, OpticalElement) else np.asarray(start)
+            start.center if hasattr(start, "center") else np.asarray(start)
         )
         self.end = (
-            end.center if isinstance(end, OpticalElement) else np.asarray(end)
+            end.center if hasattr(end, "center") else np.asarray(end)
         )
         center = (self.start + self.end) / 2
-        dist = np.linalg.norm(self.end - self.start)
+        dist = float(np.linalg.norm(self.end - self.start))
 
         # Calculate angle
         delta = self.end - self.start
@@ -205,7 +203,7 @@ class Rectangle(OpticalElement):
     """
     A rectangle represented by a polygon, defined by width and height.
     """
-    def __init__(self, position=ORIGIN, width=1.0, height=1.0, angle=0.0, **kwargs):
+    def __init__(self, position=ORIGIN, width=1, height=1, angle=0.0, **kwargs):
         self.width = float(width)
         self.height = float(height)
         super().__init__(position, size=max(width, height), angle=angle, **kwargs)
