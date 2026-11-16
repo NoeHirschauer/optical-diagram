@@ -5,7 +5,7 @@ authors = [
 ]
 description = "Draw optical diagrams using matplotlib."
 requires-python = ">=3.12,<3.15"
-version = "0.4.2"
+version = "0.4.3"
 license = { file = "LICENSE" }
 readme = "README.md"
 urls = { "Repository" = "https://github.com/NoeHirschauer/optical-diagram" }
