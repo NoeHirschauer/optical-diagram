@@ -20,18 +20,15 @@ from pathlib import Path
 
 def main() -> int:
     """Run the documentation CLI located in ``doc/cli.py``."""
-    cli_path = Path(__file__).resolve().parents[1] / "doc" / "cli.py"
+    # Step 1: Sync the environment with the `doc` extra dependencies if not installed
     try:
-        # Step 1: Sync the environment with the `doc` extra dependencies
+        import sphinx  # type: ignore
+    except ModuleNotFoundError:
         sync_doc_command = ["uv", "sync", "--group", "doc"]
         subprocess.run(sync_doc_command, check=True)
 
-        # Step 2: Run the documentation CLI
-        namespace = runpy.run_path(str(cli_path), run_name="_doc_cli")
-    except ModuleNotFoundError as error:
-        raise SystemExit(
-            "The documentation dependencies are not installed. "
-            "Install them with `uv sync --group doc`, then run `uv run doc` again."
-        ) from error
+    # Step 2: Run the documentation CLI
+    cli_path = Path(__file__).resolve().parents[1] / "doc" / "cli.py"
+    namespace = runpy.run_path(str(cli_path), run_name="_doc_cli")
 
     return namespace["main"]()
