@@ -3,8 +3,9 @@
 ===================
 """
 
+import importlib.metadata as _importlib_metadata
 
-__version__ = "0.4.2"
+__version__ = _importlib_metadata.version("optical_diagram")
 
 
 from ._base import (
