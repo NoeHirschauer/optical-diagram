@@ -151,7 +151,7 @@ class OpticalElement(ABC):
     # -------------------------------------------------------------------------
     # Creation & Duplication
     # -------------------------------------------------------------------------
-    def copy(self) -> "OpticalElement":
+    def copy(self) -> Self:
         """
         Return a deep copy of this element.
 
@@ -160,8 +160,9 @@ class OpticalElement(ABC):
 
         Returns
         -------
-        OpticalElement
-            A new instance independent of the original.
+        Self
+            A new instance of the same class with identical properties, independent of 
+            the original.
         """
         return deepcopy(self)
 
