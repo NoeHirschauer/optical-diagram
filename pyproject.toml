@@ -1,58 +1,42 @@
-[build-system]
-requires      = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "optical_diagram"
-dynamic = ["version"]
 authors = [
     { name = "Noé Hirschauer", email = "noe.hirschauer@universite-paris-saclay.fr" },
 ]
 description = "Draw optical diagrams using matplotlib."
-requires-python = ">=3.8"
+requires-python = ">=3.12,<3.15"
+version = "0.4.3"
 license = { file = "LICENSE" }
 readme = "README.md"
-
-# Project URLs
 urls = { "Repository" = "https://github.com/NoeHirschauer/optical-diagram" }
-
-# core dependencies
 dependencies = [
     "matplotlib>=3",
-    "numpy>=1.20",
+    "numpy>=2",
 ]
 
-# build optional dependencies (documentation, testing, etc.)
-[project.optional-dependencies]
-
-# documentation dependencies
-docs = [
-    "sphinx>=8.0",
+[dependency-groups]
+dev = [
+    { include-group = "tests" },
+]
+doc = [
+    "sphinx>=9.0",
     "pydata-sphinx-theme>=0.15",
-    "sphinx_gallery>=0.20"
+    "sphinx_gallery>=0.20",
+    "sphinx-autoapi>=3.9.0",
 ]
-
-# testing dependencies
 tests = [
     "pytest>=7.0",
 ]
 
-# combined development dependencies
-dev = [
-    "sphinx>=8.0",
-    "pydata-sphinx-theme>=0.15",
-    "sphinx_gallery>=0.20",
-    "pytest>=7.0",
-]
+[project.scripts]
+doc = "_doc:main"
 
+[build-system]
+requires      = ["uv_build>=0.11.10,<0.14.0"]
+build-backend = "uv_build"
 
-[tool.setuptools]
-packages = ["optical_diagram"]
-
-[tool.setuptools.dynamic]
-version = { attr = "optical_diagram.__version__" }
 
 [tool.pytest.ini_options]
-pythonpath = ["."]  # ALlow imports from the root directory in the tests folder
+pythonpath = ["."]
 testpaths  = ["tests"]
 addopts    = ["--import-mode=importlib"]

@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
+from typing import Self
 
 import numpy as np
 
-__all__ = [
+__all__ = [  # noqa: RUF022
     "RIGHT",
     "LEFT",
     "UP",
@@ -23,15 +24,24 @@ __all__ = [
 
 # Constants
 RIGHT = np.array((1.0, 0.0))
+"""np.ndarray: Unit vector pointing to the right ``(1, 0)``."""
 LEFT = np.array((-1.0, 0.0))
+"""np.ndarray: Unit vector pointing to the left ``(-1, 0)``."""
 UP = np.array((0.0, 1.0))
+"""np.ndarray: Unit vector pointing up ``(0, 1)``."""
 DOWN = np.array((0.0, -1.0))
+"""np.ndarray: Unit vector pointing down ``(0, -1)``."""
 ORIGIN = np.array((0.0, 0.0))
+"""np.ndarray: The origin ``(0, 0)``."""
 
 UR = UP + RIGHT
+"""np.ndarray: Vector pointing up and to the right ``(1, 1)``."""
 UL = UP + LEFT
+"""np.ndarray: Vector pointing up and to the left ``(-1, 1)``."""
 DR = DOWN + RIGHT
+"""np.ndarray: Vector pointing down and to the right ``(1, -1)``."""
 DL = DOWN + LEFT
+"""np.ndarray: Vector pointing down and to the left ``(-1, -1)``."""
 
 
 class OpticalElement(ABC):
@@ -42,19 +52,29 @@ class OpticalElement(ABC):
     (center, angle, size) are stored as attributes and the Matplotlib patch
     is generated only when requested.
 
-    Parameters
-    ----------
-    position : array_like, shape (2,)
-        The (x, y) coordinates of the center. Defaults to ``(0,0)``
-    size : float
-        Characteristic size (diameter for lens, side for square). Defaults to ``1.0``
-    angle : float
-        Rotation angle in degrees. Defaults to ``0.0``
-    **kwargs
-        Style arguments passed to the matplotlib patch (color, alpha, etc).
     """
 
-    def __init__(self, position=ORIGIN, size=1, angle=0.0, **kwargs):
+    def __init__(
+        self,
+        position: np.ndarray | "OpticalElement" = ORIGIN,  # noqa: TC010
+        size: float = 1,
+        angle: float = 0.0,
+        **kwargs,
+    ):
+        """
+        Parameters
+        ----------
+        position : array_like | `OpticalElement`
+            The (x, y) coordinates of the center. Can be a sequence of 2 numbers or an
+            instance of `OpticalElement`. If an `OpticalElement` is passed, its center
+            will be used. Defaults to ``(0,0)``
+        size : float
+            Characteristic size (diameter for lens, side for square). Defaults to ``1.0``
+        angle : float
+            Rotation angle in degrees. Defaults to ``0.0``
+        **kwargs
+            Style arguments passed to the matplotlib patch (color, alpha, etc).
+        """
         if isinstance(position, OpticalElement):
             _position = position.center
         else:
@@ -95,8 +115,13 @@ class OpticalElement(ABC):
     # Geometric Properties
     # -------------------------------------------------------------------------
     @property
-    def center(self):
-        """np.ndarray: The current (x, y) center of the element."""
+    def center(self) -> np.ndarray:
+        """The current (x, y) center of the element.
+
+        This property can be set directly to move the element, or it can be modified via
+        the `move_to`, `shift`, `rotate`, `flip`, and `scale` methods for chainable
+        transformations.
+        """
         return self._center
 
     @center.setter
@@ -104,29 +129,29 @@ class OpticalElement(ABC):
         self._center = np.asarray(value, dtype=float)
 
     @property
-    def x(self):
-        """float: The current x-coordinate of the element's center."""
+    def x(self) -> float:
+        """The current x-coordinate of the element's center."""
         return self._center[0]
 
     @property
-    def y(self):
-        """float: The current y-coordinate of the element's center."""
+    def y(self) -> float:
+        """The current y-coordinate of the element's center."""
         return self._center[1]
 
     @property
-    def size(self):
-        """float: The current characteristic size of the element."""
+    def size(self) -> float:
+        """The current characteristic size of the element."""
         return self._size
 
     @property
-    def angle(self):
-        """float: The current rotation angle in degrees."""
+    def angle(self) -> float:
+        """The current rotation angle in degrees."""
         return self._angle
 
     # -------------------------------------------------------------------------
     # Creation & Duplication
     # -------------------------------------------------------------------------
-    def copy(self):
+    def copy(self) -> "OpticalElement":
         """
         Return a deep copy of this element.
 
@@ -143,46 +168,56 @@ class OpticalElement(ABC):
     # -------------------------------------------------------------------------
     # Geometric Utilities (Anchors)
     # -------------------------------------------------------------------------
-    def get_rotation_matrix(self):
-        """
-        Return the 2D rotation matrix based on the element's angle.
+    def get_rotation_matrix(self) -> np.ndarray:
+        """Get the 2D rotation matrix based on the element's angle.
+
+        Returns
+        -------
+        np.ndarray
+            A 2x2 rotation matrix.
         """
         theta = np.deg2rad(self._angle)
         return np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
 
-    def get_local_points(self):
-        """
-        Return key points (like corners or ends) in unrotated, local coordinates (relative to 0,0).
-        Must be implemented by subclasses to support get_boundary.
+    def get_local_points(self) -> np.ndarray:
+        """Return key points (like corners or ends) in unrotated, local coordinates
+
+        Coordinates are relative to ``(0,0)``. Must be implemented by subclasses to
+        support `get_boundary`.
+
+        Returns
+        -------
+        np.ndarray
+            An array of shape (N, 2) containing the local coordinates of key points.
         """
         # Default: just top and bottom based on size (good for lines/lenses)
         half = self._size / 2.0
         return np.array([[0, half], [0, -half]])
 
-    def get_critical_points(self):
-        """Return the key geometric points transformed to world space."""
+    def get_critical_points(self) -> np.ndarray:
+        """Return the key geometric points transformed to world space.
+
+        Returns
+        -------
+        np.ndarray
+            An array of shape (N, 2) containing the world coordinates of key points.
+        """
         local_pts = self.get_local_points()
         rot = self.get_rotation_matrix()
         return (rot @ local_pts.T).T + self.center
 
-    def get_boundary_box(self):
+    def get_boundary_box(self) -> tuple[float, float, float, float]:
         """Returns (min_x, min_y, max_x, max_y) of the element."""
         pts = self.get_critical_points()
         return np.min(pts[:, 0]), np.min(pts[:, 1]), np.max(pts[:, 0]), np.max(pts[:, 1])
 
-    def get_edge(self, direction):
-        """
-        Get the point on the bounding box in a specific direction.
+    def get_edge(self, direction: np.ndarray) -> np.ndarray:
+        """Get the (x, y) point on the bounding box in a specific direction.
 
         Parameters
         ----------
         direction : array_like
-            Vector indicating direction (e.g. RIGHT, UP).
-
-        Returns
-        -------
-        np.array
-            The (x, y) point on the edge.
+            Vector indicating direction (e.g. `RIGHT`, `UP`).
         """
         min_x, min_y, max_x, max_y = self.get_boundary_box()
         center_box = np.array([(min_x + max_x) / 2, (min_y + max_y) / 2])
@@ -198,19 +233,21 @@ class OpticalElement(ABC):
     # -------------------------------------------------------------------------
     # Physical Utilities (for ray tracing)
     # -------------------------------------------------------------------------
-    def get_normal(self):
+    def get_normal(self) -> np.ndarray:
         """Returns the normal vector of the element plane."""
         theta = np.deg2rad(self._angle)
         # Assuming element lies along local Y, normal is along local X
         # Rotated by theta:
         return np.array([np.cos(theta), np.sin(theta)])
 
-    def get_direction_vector(self):
+    def get_direction_vector(self) -> np.ndarray:
         """Returns the vector pointing along the element's surface."""
         theta = np.deg2rad(self._angle)
         return np.array([-np.sin(theta), np.cos(theta)])
 
-    def intersect(self, ray_origin, ray_direction):
+    def intersect(
+        self, ray_origin: np.ndarray, ray_direction: np.ndarray
+    ) -> np.ndarray | None:
         r"""
         Calculate intersection point of a ray with this element's plane.
 
@@ -264,7 +301,12 @@ class OpticalElement(ABC):
 
         return intersection
 
-    def interact(self, ray_origin, ray_direction, next_element_center=None):
+    def interact(
+        self,
+        ray_origin: np.ndarray,
+        ray_direction: np.ndarray,
+        next_element_center: np.ndarray | None = None,
+    ) -> np.ndarray:
         """Physics logic: How does this element alter an incoming ray?
 
         This method should be overridden by subclasses representing lenses, mirrors, etc.
@@ -296,13 +338,12 @@ class OpticalElement(ABC):
     # -------------------------------------------------------------------------
     # Transformations (Chainable)
     # -------------------------------------------------------------------------
-    def move_to(self, target):
-        """
-        Move the center of the element to the specified point or another element's center.
+    def move_to(self, target: np.ndarray | "OpticalElement") -> Self:  # noqa: TC010
+        """Move the center of the element to the specified point.
 
         Parameters
         ----------
-        target : array_like or `OpticalElement`
+        target : array_like | `OpticalElement`
             The point (x, y) to move to, or an `OpticalElement` whose center coordinates
             will be used as target
 
@@ -318,9 +359,8 @@ class OpticalElement(ABC):
         self.center = target
         return self
 
-    def shift(self, vector):
-        """
-        Translate the element by a vector.
+    def shift(self, vector: np.ndarray) -> Self:
+        """Translate the element by a vector.
 
         Parameters
         ----------
@@ -334,17 +374,20 @@ class OpticalElement(ABC):
         self.center = self.center + np.asarray(vector)
         return self
 
-    def rotate(self, angle_degrees, about_point=None):
-        """
-        Rotate the element.
+    def rotate(
+        self,
+        angle_degrees: float,
+        about_point: np.ndarray | "OpticalElement" | None = None,  # noqa: TC010
+    ) -> Self:
+        """Rotate the element.
 
         Parameters
         ----------
         angle_degrees : float
             Angle to add to current rotation.
-        about_point : array_like or `OpticalElement`, optional
+        about_point : array_like | `OpticalElement` | None, optional
             Point to rotate about. If an `OpticalElement` is provided, its center is used
-            as the pivot point If None, rotates about self.center.
+            as the pivot point. If None, rotates about self.center. Defaults to None.
 
         Returns
         -------
@@ -370,18 +413,22 @@ class OpticalElement(ABC):
 
         return self
 
-    def flip(self, axis=UP, about_point=None):
-        """
-        Mirror the element across an axis passing through a point.
+    def flip(
+        self,
+        axis: np.ndarray = UP,
+        about_point: np.ndarray | "OpticalElement" | None = None,  # noqa: TC010
+    ) -> Self:
+        """Mirror the element across an axis passing through a point.
 
         Parameters
         ----------
         axis : array_like
-            Vector defining the line of reflection (e.g., UP for vertical flip,
-            RIGHT for horizontal flip). Defaults to UP.
-        about_point : array_like or `OpticalElement`, optional
+            Vector defining the line of reflection (e.g., `UP` for vertical flip,
+            `RIGHT` for horizontal flip). Defaults to `UP`.
+        about_point : array_like | `OpticalElement` | None, optional
             Point the reflection axis passes through. If an `OpticalElement`
             is provided, its center is used. If None, flips about self.center.
+            Defaults to None.
 
         Returns
         -------
@@ -415,15 +462,18 @@ class OpticalElement(ABC):
 
         return self
 
-    def scale(self, scale_factor, about_point=None):
-        """
-        Scale the element's size and potentially its position.
+    def scale(
+        self,
+        scale_factor: float,
+        about_point: np.ndarray | "OpticalElement" | None = None,  # noqa: TC010
+    ) -> Self:
+        """Scale the element's size and potentially its position.
 
         Parameters
         ----------
         scale_factor : float
             Factor to multiply the current size by.
-        about_point : array_like or `OpticalElement`, optional
+        about_point : array_like | `OpticalElement` | None, optional
             The reference point for the scaling operation.
             If an `OpticalElement` is provided, its center is used.
             If None, the element scales in place (about its own center).
@@ -450,9 +500,10 @@ class OpticalElement(ABC):
 
         return self
 
-    def next_to(self, other, direction=RIGHT, buff=0.0):
-        """
-        Move this element next to another element.
+    def next_to(
+        self, other: "OpticalElement", direction: np.ndarray = RIGHT, buff: float = 0.0
+    ) -> Self:
+        """Move this element next to another element.
 
         Parameters
         ----------
@@ -462,6 +513,11 @@ class OpticalElement(ABC):
             Direction to place this element (e.g. RIGHT).
         buff : float
             Buffer distance. Defaults to 0
+
+        Returns
+        -------
+        self
+            The instance itself (for chaining).
         """
         target_point = other.get_edge(direction)
         my_anchor = self.get_edge(-np.array(direction))
@@ -480,7 +536,6 @@ class OpticalElement(ABC):
     def color(self):
         """Shorthand color proxy.
 
-
         Defaults to edgecolor; subclasses may override to map to facecolor instead.
         If edgecolor is not set, falls back to facecolor.
         If neither is set, returns None.
@@ -497,9 +552,19 @@ class OpticalElement(ABC):
             self._style["edgecolor"] = value
             self._style.pop("color", None)
 
-    # small compatibility wrappers so existing call-sites keep working
-    def set_color(self, color):
-        """Set the shorthand color.
+    # Chainable style setters
+    def set_color(self, color) -> Self:
+        """Set the shorthand color. Chainable.
+
+        Parameters
+        ----------
+        color : str or tuple
+            Color specification (name, hex, RGB, etc).
+
+        Returns
+        -------
+        self
+            The instance itself (for chaining).
 
         Note
         ----
@@ -508,18 +573,51 @@ class OpticalElement(ABC):
         self.color = color
         return self
 
-    def set_facecolor(self, color):
-        """Set the facecolor of the element."""
+    def set_facecolor(self, color) -> Self:
+        """Set the facecolor of the element. Chainable.
+
+        Parameters
+        ----------
+        color : str or tuple
+            Color specification (name, hex, RGB, etc.).
+
+        Returns
+        -------
+        self
+            The instance itself (for chaining).
+        """
         self.facecolor = color
         return self
 
-    def set_edgecolor(self, color):
-        """Set the edgecolor of the element."""
+    def set_edgecolor(self, color) -> Self:
+        """Set the edgecolor of the element. Chainable.
+
+        Parameters
+        ----------
+        color : str or tuple
+            Color specification (name, hex, RGB, etc.).
+
+        Returns
+        -------
+        self
+            The instance itself (for chaining).
+        """
         self.edgecolor = color
         return self
 
-    def set_style(self, **kwargs):
-        """Update matplotlib style parameters (linewidth, alpha, etc)."""
+    def set_style(self, **kwargs) -> Self:
+        """Update matplotlib style parameters (linewidth, alpha, etc). Chainable.
+
+        Parameters
+        ----------
+        **kwargs
+            Style parameters to update.
+
+        Returns
+        -------
+        self
+            The instance itself (for chaining).
+        """
         self._style.update(kwargs)
         return self
 
@@ -529,7 +627,6 @@ class OpticalElement(ABC):
     @abstractmethod
     def _get_mpl_artist(self):
         """Generate and return the matplotlib artist for the current state."""
-        pass
 
     def draw(self, ax):
         """Add the element to the provided Axes."""
@@ -565,7 +662,7 @@ class OpticalSystem(OpticalElement):
                 self._style["facecolor"] = col
 
     @property
-    def focal_length(self):
+    def focal_length(self) -> float | None:
         """float or None: The focal length of the optical system.
 
         If None, the element has no focusing power.
@@ -580,7 +677,16 @@ class OpticalSystem(OpticalElement):
 class Group(OpticalElement):
     """A collection of OpticalElements treated as a single unit."""
 
-    def __init__(self, elements, **kwargs):
+    def __init__(self, elements: list["OpticalElement"], **kwargs):
+        """
+        Parameters
+        ----------
+        elements : list of OpticalElement
+            The elements to include in the group.
+        **kwargs
+            Additional keyword arguments to pass to the base class.
+        """
+
         # Compute center as the centroid of all elements
         centers = np.array([el.center for el in elements])
         group_center = np.mean(centers, axis=0)
@@ -598,7 +704,7 @@ class Group(OpticalElement):
         super().__init__(position=group_center, size=2 * max_dist, angle=0.0, **kwargs)
         self.elements = elements
 
-    def add(self, *elements):
+    def add(self, *elements: "OpticalElement"):
         """Add one or more elements to the group and update its geometry.
 
         This method appends the given elements to ``self.elements`` and then
@@ -614,7 +720,7 @@ class Group(OpticalElement):
             group.
         """
         self.elements.extend(elements)
-        
+
         # Recompute center and size
         centers = np.array([el.center for el in self.elements])
         self.center = np.mean(centers, axis=0)
@@ -629,6 +735,19 @@ class Group(OpticalElement):
             max_dist = max(max_dist, np.max(dists))
         self._size = 2 * max_dist
 
+    def get_boundary_box(self) -> tuple[float, float, float, float]:
+        """Calculate the bounding box that contains all elements in the group."""
+        if not self.elements:
+            return self.center[0], self.center[1], self.center[0], self.center[1]
+
+        bboxes = [el.get_boundary_box() for el in self.elements]
+        min_x = min(el[0] for el in bboxes)
+        min_y = min(el[1] for el in bboxes)
+        max_x = max(el[2] for el in bboxes)
+        max_y = max(el[3] for el in bboxes)
+
+        return min_x, min_y, max_x, max_y
+
     def _get_mpl_artist(self):
         # Groups do not have a direct artist; they render their elements instead.
         raise NotImplementedError("Group does not have a direct matplotlib artist.")
@@ -642,7 +761,7 @@ class Group(OpticalElement):
         return artists
 
     # ----- Delegated transforms (update group props AND elements) -----
-    def move_to(self, target):
+    def move_to(self, target) -> Self:
         if isinstance(target, OpticalElement):
             target = target.center
         else:
@@ -655,7 +774,7 @@ class Group(OpticalElement):
             el.shift(delta)
         return self
 
-    def shift(self, vector):
+    def shift(self, vector) -> Self:
         vec = np.asarray(vector, float)
         # Update group center
         self.center = self.center + vec
@@ -664,7 +783,7 @@ class Group(OpticalElement):
             el.shift(vec)
         return self
 
-    def rotate(self, angle_degrees, about_point=None):
+    def rotate(self, angle_degrees, about_point=None) -> Self:
         # Resolve pivot
         if about_point is None:
             pivot = self.center
@@ -679,7 +798,12 @@ class Group(OpticalElement):
         # If rotating about a pivot not equal to group's center, update group's center
         if pivot is not None:
             rad = np.deg2rad(angle_degrees)
-            rot_matrix = np.array([[np.cos(rad), -np.sin(rad)], [np.sin(rad), np.cos(rad)]])
+            rot_matrix = np.array(
+                [
+                    [np.cos(rad), -np.sin(rad)],
+                    [np.sin(rad), np.cos(rad)],
+                ]
+            )
             self.center = rot_matrix @ (self.center - pivot) + pivot
 
         # Delegate to elements
@@ -687,7 +811,7 @@ class Group(OpticalElement):
             el.rotate(angle_degrees, about_point=pivot)
         return self
 
-    def flip(self, axis=UP, about_point=None):
+    def flip(self, axis=UP, about_point=None) -> Self:
         # Resolve pivot
         if about_point is None:
             pivot = self.center
@@ -714,7 +838,7 @@ class Group(OpticalElement):
             el.flip(axis=axis, about_point=pivot)
         return self
 
-    def scale(self, scale_factor, about_point=None):
+    def scale(self, scale_factor, about_point=None) -> Self:
         # Resolve pivot
         if about_point is None:
             pivot = self.center
@@ -736,7 +860,7 @@ class Group(OpticalElement):
             el.scale(scale_factor, about_point=pivot)
         return self
 
-    def next_to(self, other, direction=RIGHT, buff=0.0):
+    def next_to(self, other, direction=RIGHT, buff=0.0) -> Self:
         target_point = other.get_edge(direction)
         my_anchor = self.get_edge(-np.array(direction))
         shift_vec = target_point - my_anchor + np.array(direction) * buff

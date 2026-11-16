@@ -4,7 +4,7 @@ from matplotlib.patches import Polygon as MplPolygon
 
 from ._base import OpticalElement
 
-__all__ = ["SimpleBeam", "DivergingBeam", "RayTracedBeam"]
+__all__ = ["SimpleBeam", "DivergingBeam", "RayTracedBeam"]  # noqa: RUF022
 
 
 class SimpleBeam(OpticalElement):

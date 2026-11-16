@@ -7,7 +7,7 @@ from matplotlib.path import Path
 from ._annotations import Point
 from ._base import RIGHT, UP, Group, OpticalElement, get_normal_vector
 
-__all__ = ["Fiber", "FiberSplitter", "FiberCoupler"]
+__all__ = ["Fiber", "FiberSplitter", "FiberCoupler"]  # noqa: RUF022
 
 
 class Fiber(OpticalElement):

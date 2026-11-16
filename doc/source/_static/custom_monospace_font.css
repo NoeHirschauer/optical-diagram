@@ -1,0 +1,10 @@
+/* Set the monospace font family */
+
+html {
+    --pst-font-family-monospace: "FiraCode Nerd Font Mono", "JetBrains Mono", var(--pst-font-family-monospace-system);
+}
+
+/* Enable the following calt ligatures : 'ss05', 'ss03', 'ss02'*/
+pre {
+    font-feature-settings: "ss05", "ss03", "ss02";
+}

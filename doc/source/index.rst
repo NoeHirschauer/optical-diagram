@@ -15,5 +15,5 @@ For now, you can click on the links in the top bar to go to the different sectio
    :hidden:
 
    _autoexamples/index
-   api_reference
+   autoapi/index
    releases

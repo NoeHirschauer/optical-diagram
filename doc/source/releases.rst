@@ -9,14 +9,21 @@ Releases
    :local:
 
 
+Version 0.4.3
+-------------
+
+- Moved to a src layout for the project to make it easier to install and use as a package.
+- Updated the documentation to reflect the new src layout and added instructions for installing the package.
+- Added project scripts for the documentation and for running tests, compatible with `uv run ...`
+
+Previous Releases
+=================
+
 Version 0.4.2
 -------------
 
 - fixed the color property of `Point` and changed the color logic of fibers to ensure
   that the color of the `Fiber` is properly reflected in the end `Points`
-
-Previous Releases
-=================
 
 Version 0.4.1
 --------------
