@@ -18,6 +18,8 @@ from ._base import (
     DR,
     DL,
     ORIGIN,
+    OpticalElement,
+    OpticalSystem,
     Group,
     get_axis_direction,
     get_normal_direction,
@@ -48,6 +50,10 @@ __all__ = [  # noqa: RUF022
     "DR",
     "DL",
     "ORIGIN",
+
+    # Base classes
+    "OpticalElement",
+    "OpticalSystem",
 
     # Mirrors
     "PlaneMirror",
