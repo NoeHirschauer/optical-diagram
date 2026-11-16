@@ -17,10 +17,31 @@ class Fiber(OpticalElement):
     """
 
     def __init__(
-        self, start, end, angle_start=0.0, angle_end=0.0, stiffness=0.5, **kwargs
+        self,
+        start: OpticalElement | np.ndarray,
+        end: OpticalElement | np.ndarray,
+        angle_start: float = 0.0,
+        angle_end: float = 0.0,
+        stiffness: float = 0.5,
+        **kwargs,
     ):
-        # ensure fiber is not filled by default (closed PathPatch becomes filled otherwise)
-        # kwargs.setdefault("facecolor", "none")
+        """
+        Parameters
+        ----------
+        start : array-like or OpticalElement
+            Starting coordinates or an element with .center used as start position.
+        end : array-like or OpticalElement
+            Ending coordinates or an element with .center used as end position.
+        angle_start : float, optional
+            Tangent angle at the start point in degrees. Default is 0.0.
+        angle_end : float, optional
+            Tangent angle at the end point in degrees. Default is 0.0.
+        stiffness : float, optional
+            Stiffness of the fiber. Default is 0.5.
+        **kwargs : dict, optional
+            styling forwarded to the base OpticalElement class.
+
+        """
 
         # 1. Resolve initial coordinates
         p0_pos = start.center if hasattr(start, "center") else np.asarray(start)
@@ -35,8 +56,9 @@ class Fiber(OpticalElement):
         # We pass the fiber's color to the dots so they match by default
         dot_color = kwargs.get("color")
         self.start_point = Point(p0_pos, color=dot_color)
+        """Point : The starting point of the fiber."""
         self.end_point = Point(p3_pos, color=dot_color)
-        
+        """Point : The ending point of the fiber."""
 
         self.angle_start = float(angle_start)
         self.angle_end = float(angle_end)
@@ -47,7 +69,7 @@ class Fiber(OpticalElement):
         # 4. Initialize base at the midpoint
         midpoint = (self.start_point.center + self.end_point.center) / 2.0
         super().__init__(midpoint, size=1.0, angle=0.0, **kwargs)
-       
+
         # override the color property to ensure it is applied to everything
         if "color" in kwargs:
             self.color = kwargs.pop("color")
@@ -141,16 +163,16 @@ class Fiber(OpticalElement):
     def facecolor(self, value):
         # ignore attempts to set a fill on Fiber; ensure it stays 'none'
         self._style["facecolor"] = "none"
-    
+
     @property
     def color(self):
         """Shorthand color. Proxies to edgecolor for the fiber line"""
         return self._style.get("edgecolor")
-    
+
     @color.setter
     def color(self, value):
         """Set shorthand color for the fiber line (proxies to edgecolor).
-        
+
         This also updates the ``color`` of the endpoint markers to match the fiber line
         color for visual consistency.
         """
@@ -183,15 +205,15 @@ class Fiber(OpticalElement):
 
 
 class FiberSplitter(Group):
-    """
-    Composite element implemented as a Group of two Fibers that share a common input Point.
+    """Composite element: `Group` of two `Fibers` sharing a common input `Point`.
 
     Notes
     -----
 
-    Only the 3 endpoint Points are part of this Group; the internal Fibers are not.
+    Only the 3 endpoint `Points` are part of this Group; the internal Fibers are not.
     Transformations on the FiberSplitter are delegated to the Points, which in turn
     update the internal Fibers automatically.
+
     """
 
     def __init__(
@@ -239,10 +261,10 @@ class FiberSplitter(Group):
 
         **kwargs : dict, optional
             styling forwarded to the internal Fiber objects
+
         """
         # styling defaults
         kwargs.setdefault("color", "C0")
-
 
         # Resolve input position
         input_pos = (
@@ -278,12 +300,17 @@ class FiberSplitter(Group):
         fa = Fiber(input_pos, out_a_pos, **kwargs)
         fb = Fiber(input_pos, out_b_pos, **kwargs)
 
-        self.input_point = fa.start_point  # shared input Point
-        self.out_a_point = fa.end_point  # output A Point
-        self.out_b_point = fb.end_point  # output B Point
+        self.input_point: Point = fa.start_point  # shared input Point
+        """The input point of the splitter."""
+        self.out_a_point: Point = fa.end_point  # output A Point
+        """The output point A of the splitter."""
+        self.out_b_point: Point = fb.end_point  # output B Point
+        """The output point B of the splitter."""
 
-        self.fiber_a = fa
-        self.fiber_b = fb
+        self.fiber_a: Fiber = fa
+        """The internal Fiber connecting the input to output A."""
+        self.fiber_b: Fiber = fb
+        """The internal Fiber connecting the input to output B."""
 
         # Initialize as a Group containing only the Fibers for correct transforms
         elements = [self.fiber_a, self.fiber_b]
@@ -291,7 +318,7 @@ class FiberSplitter(Group):
 
         if "color" in kwargs:
             self.color = kwargs.pop("color")
-        
+
         # We need to update the points if any changes to length/height/alignment occur
         # For this, we save the properties internally.
         self._length = length
@@ -304,7 +331,9 @@ class FiberSplitter(Group):
         self._show_input = False
         self._show_out_a = False
         self._show_out_b = False
-        self._show_labels = False  # controls optional debug/annotation labels on splitter points
+        self._show_labels = (
+            False  # controls optional debug/annotation labels on splitter points
+        )
 
     @property
     def color(self):
@@ -315,7 +344,6 @@ class FiberSplitter(Group):
     def color(self, value):
         self.fiber_a.color = value
         self.fiber_b.color = value
-
 
     def _update_geometry(self):
         """Internal helper to update output positions based on new geometry."""
@@ -486,7 +514,7 @@ class FiberSplitter(Group):
         self.fiber_b.show_connections(start=input, end=out_b)
 
         return self
-    
+
     def show_labels(self):
         """Display labels to the corner points for debugging.
 
@@ -528,7 +556,7 @@ class FiberSplitter(Group):
         # normalize and store
         self._axis = reflected / np.linalg.norm(reflected)
 
-        # update transverse accordingly    
+        # update transverse accordingly
         self._axis_transverse = get_normal_vector(self._axis)
         return super().flip(axis, about_point)
 

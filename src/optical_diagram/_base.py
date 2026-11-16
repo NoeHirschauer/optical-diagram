@@ -152,8 +152,7 @@ class OpticalElement(ABC):
     # Creation & Duplication
     # -------------------------------------------------------------------------
     def copy(self) -> Self:
-        """
-        Return a deep copy of this element.
+        """Return a deep copy of this element.
 
         This is useful for creating multiple identical or similar elements
         without redefining all properties.
@@ -703,7 +702,8 @@ class Group(OpticalElement):
             max_dist = max(max_dist, np.max(dists))
 
         super().__init__(position=group_center, size=2 * max_dist, angle=0.0, **kwargs)
-        self.elements = elements
+        self.elements: list[OpticalElement] = elements
+        """The list of OpticalElement instances contained in the group, in the order they were added."""
 
     def add(self, *elements: "OpticalElement"):
         """Add one or more elements to the group and update its geometry.
