@@ -4,7 +4,7 @@ from matplotlib.patches import Polygon as MplPolygon
 
 from ._base import OpticalSystem
 
-__all__ = ["PlaneMirror", "ConcaveMirror", "ConvexMirror", "BeamSplitter"]
+__all__ = ["PlaneMirror", "ConcaveMirror", "ConvexMirror", "BeamSplitter"]  # noqa: RUF022
 
 
 class _Mirror(OpticalSystem):

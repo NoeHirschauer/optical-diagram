@@ -36,7 +36,7 @@ from ._annotations import (
 from ._fiber import Fiber, FiberSplitter, FiberCoupler
 from ._table import OpticalTable
 
-__all__ = [
+__all__ = [  # noqa: RUF022
     # Directions
     "RIGHT",
     "LEFT",

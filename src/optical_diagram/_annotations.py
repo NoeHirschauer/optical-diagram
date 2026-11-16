@@ -4,7 +4,7 @@ from matplotlib.patches import Polygon as MplPolygon
 
 from ._base import ORIGIN, OpticalElement
 
-__all__ = [
+__all__ = [  # noqa: RUF022
     "Plane",
     "Point",
     "OpticalAxis",

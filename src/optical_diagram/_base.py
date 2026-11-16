@@ -3,7 +3,7 @@ from copy import deepcopy
 
 import numpy as np
 
-__all__ = [
+__all__ = [  # noqa: RUF022
     "RIGHT",
     "LEFT",
     "UP",
@@ -529,7 +529,7 @@ class OpticalElement(ABC):
     @abstractmethod
     def _get_mpl_artist(self):
         """Generate and return the matplotlib artist for the current state."""
-        pass
+        
 
     def draw(self, ax):
         """Add the element to the provided Axes."""
@@ -628,6 +628,19 @@ class Group(OpticalElement):
             dists = np.linalg.norm(corners - self.center, axis=1)
             max_dist = max(max_dist, np.max(dists))
         self._size = 2 * max_dist
+
+    def get_boundary_box(self):
+        """Calculate the bounding box that contains all elements in the group."""
+        if not self.elements:
+            return self.center[0], self.center[1], self.center[0], self.center[1]
+
+        min_x = min(el.get_boundary_box()[0] for el in self.elements)
+        min_y = min(el.get_boundary_box()[1] for el in self.elements)
+        max_x = max(el.get_boundary_box()[2] for el in self.elements)
+        max_y = max(el.get_boundary_box()[3] for el in self.elements)
+        
+        return min_x, min_y, max_x, max_y
+    
 
     def _get_mpl_artist(self):
         # Groups do not have a direct artist; they render their elements instead.
