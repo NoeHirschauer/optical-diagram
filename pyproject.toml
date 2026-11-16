@@ -4,7 +4,7 @@ authors = [
     { name = "Noé Hirschauer", email = "noe.hirschauer@universite-paris-saclay.fr" },
 ]
 description = "Draw optical diagrams using matplotlib."
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.15"
 version = "0.4.2"
 license = { file = "LICENSE" }
 readme = "README.md"
@@ -18,7 +18,7 @@ dependencies = [
 dev = [
     { include-group = "tests" },
 ]
-docs = [
+doc = [
     "sphinx>=9.0",
     "pydata-sphinx-theme>=0.15",
     "sphinx_gallery>=0.20",
@@ -26,6 +26,9 @@ docs = [
 tests = [
     "pytest>=7.0",
 ]
+
+[project.scripts]
+doc = "_doc:main"
 
 [build-system]
 requires      = ["uv_build>=0.11.10,<0.14.0"]

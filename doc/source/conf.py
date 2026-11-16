@@ -27,6 +27,7 @@ github_repo = "https://github.com/NoeHirschauer/optical-diagram"
 
 # read the version from the package __init__.py
 from optical_diagram import __version__
+
 release = version = __version__
 
 # -- General configuration ---------------------------------------------------
@@ -98,7 +99,7 @@ autosummary_generate = True  # generate stub pages automatically
 napoleon_numpy_docstring = True
 napoleon_google_docstring = True
 napoleon_include_init_with_doc = False  # already merged with class doc (autoclass)
-napoleon_include_private_with_doc = True
+napoleon_include_private_with_doc = False
 napoleon_include_special_with_doc = True
 napoleon_use_admonition_for_examples = True
 napoleon_use_admonition_for_notes = True
