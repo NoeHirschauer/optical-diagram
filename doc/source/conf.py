@@ -59,7 +59,6 @@ sphinx_gallery_conf = {
     "show_signature": False,  # do not show function signatures in the gallery
 }
 
-# %% autodoc configuration
 
 templates_path = ["_templates"]
 exclude_patterns = [
@@ -95,6 +94,8 @@ napoleon_include_special_with_doc = True
 napoleon_use_admonition_for_examples = True
 napoleon_use_admonition_for_notes = True
 napoleon_use_admonition_for_references = True
+napoleon_preprocess_types = True
+napoleon_use_rtype = True
 napoleon_type_aliases = {
     "np.ndarray": "~numpy.ndarray",
     "ndarray": "~numpy.ndarray",
@@ -102,7 +103,6 @@ napoleon_type_aliases = {
     "plt.Axes": "~matplotlib.axes.Axes",
     "Literal": "~typing.Literal",
 }
-napoleon_use_rtype = False
 napoleon_custom_sections = [("See also", "See Also")]
 
 
