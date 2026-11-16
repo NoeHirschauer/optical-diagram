@@ -6,16 +6,21 @@
 # make sure that the package is importable
 import os
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.abspath("../.."))
 
 # %% -- Path setup --------------------------------------------------------------
 
 # define the package path
-PKG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+ROOT_PATH = Path(os.path.abspath(os.path.join(os.path.dirname(__file__)))).parent.parent
+EXAMPLES_PATH = ROOT_PATH / "examples"
+PKG_PATH = ROOT_PATH / "src"
 
-# define the output path for the generated API docs. it will be docs/source/auto_api
-APIDOC_PATH = os.path.join(os.path.dirname(__file__), "auto_api")
+# if __name__ == "__main__":
+#     print(f"ROOT_PATH     : {ROOT_PATH}")
+#     print(f"PKG_PATH      : {PKG_PATH}")
+#     print(f"EXAMPLES_PATH : {EXAMPLES_PATH}")
 
 # %% -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -34,9 +39,9 @@ release = version = __version__
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx.ext.autosummary",
+    "autoapi.extension",
     "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
     "sphinx_gallery.gen_gallery",
 ]
@@ -44,7 +49,7 @@ extensions = [
 # %% sphinx-gallery configuration
 
 sphinx_gallery_conf = {
-    "examples_dirs": os.path.join(PKG_PATH, "examples"),  # path to example scripts
+    "examples_dirs": EXAMPLES_PATH,  # path to example scripts
     "gallery_dirs": "_autoexamples",  # path to save generated examples
     "filename_pattern": r"\.py",  # include all .py files
     "line_numbers": False,  # do not add line numbers to code blocks
@@ -62,20 +67,6 @@ exclude_patterns = [
     "**docs/",
 ]
 
-autodoc_default_options = {
-    "member-order": "bysource",
-    "show-inheritance": True,
-    "inherited-members": True,
-    "imported-members": False,
-}
-
-# Specify what content will be inserted into the main body of an autoclass directive.
-# One of "class", "init", "both".
-autoclass_content = "both"
-
-# How to represent typehints in the documentation. "signature", "description" or "none".
-autodoc_typehints = "description"
-
 # Do not show param = Literal["a", "b"] but only param = "a" | "b"
 python_display_short_literal_types = True
 
@@ -85,28 +76,68 @@ add_function_parentheses = False
 # If True, create TOC entries for domain objects (functions, classes, attributes, ...).
 toc_object_entries = True
 
+# How to display the members in the TOC. One of ['domain'] | 'hide' | 'all'.
+toc_object_entries_show_parents = "hide"
+
 # add line numbers to source code
-viewcode_line_numbers = True
+viewcode_line_numbers = False
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 default_role = "autolink"
-
-# Auto-summary configuration
-autosummary_generate = True  # generate stub pages automatically
 
 # %% Napoleon configuration
 
 napoleon_numpy_docstring = True
 napoleon_google_docstring = True
-napoleon_include_init_with_doc = False  # already merged with class doc (autoclass)
+napoleon_include_init_with_doc = True
 napoleon_include_private_with_doc = False
 napoleon_include_special_with_doc = True
 napoleon_use_admonition_for_examples = True
 napoleon_use_admonition_for_notes = True
 napoleon_use_admonition_for_references = True
-
+napoleon_type_aliases = {
+    "np.ndarray": "~numpy.ndarray",
+    "ndarray": "~numpy.ndarray",
+    "ArrayLike": "~numpy.typing.ArrayLike",
+    "plt.Axes": "~matplotlib.axes.Axes",
+    "Literal": "~typing.Literal",
+}
 napoleon_use_rtype = False
+napoleon_custom_sections = [("See also", "See Also")]
 
+
+
+# %% -- autoapi settings ------------------------------------------------------
+# https://sphinx-autoapi.readthedocs.io/en/latest/index.html
+autoapi_dirs = [PKG_PATH]
+autoapi_ignore = ["**/tests/*", "**/doc/**", "**/examples/**"]
+autoapi_template_dir = templates_path[0] + "/_autoapi/"
+autoapi_python_class_content = "both"  # include both class and __init__ docstrings
+autoapi_include_summaries = True  # include the first line of docstrings
+autoapi_options = [
+    "members",
+    # "undoc-members",
+    # "private-members",
+    "show-inheritance",
+    "show-module-summary",
+    "special-members",
+    "imported-members",
+]
+autoapi_own_page_level = "class"
+autoapi_member_order = "bysource"
+# autoapi_keep_files = True  # wether to keep the generated rst files (for debugging)
+
+# Where to show the type hints. {["signature"], "description", "none", "both"}
+autodoc_typehints = "description"
+
+# %% -- intersphinx mapping ---------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html
+
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+}
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -134,5 +165,7 @@ html_theme_options = {
 
 # add css files to the build
 html_css_files = [
-    "monospace_titles.css",
+    "custom_monospace_font.css",
+    "remove_sphinx_gallery_download_links.css",
+    "wider_article_content.css",
 ]

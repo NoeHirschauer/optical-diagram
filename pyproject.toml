@@ -22,6 +22,7 @@ doc = [
     "sphinx>=9.0",
     "pydata-sphinx-theme>=0.15",
     "sphinx_gallery>=0.20",
+    "sphinx-autoapi>=3.9.0",
 ]
 tests = [
     "pytest>=7.0",
