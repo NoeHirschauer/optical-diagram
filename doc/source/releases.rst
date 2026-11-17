@@ -9,13 +9,18 @@ Releases
    :local:
 
 
-Version 0.5.0
+Version 0.5.1
 -------------
-- Cleaned up the public and private API of the package. All physics-related methods are now private, and the public API is focused on creating and manipulating optical elements and beams.
+- Added `Circle` class for drawing circles in the optical diagram.
+- Updated the elements included in the documentation.
 
 
 Previous Releases
 =================
+
+Version 0.5.0
+-------------
+- Cleaned up the public and private API of the package. All physics-related methods are now private, and the public API is focused on creating and manipulating optical elements and beams.
 
 Version 0.4.3
 -------------

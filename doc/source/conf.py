@@ -87,24 +87,31 @@ default_role = "autolink"
 # %% Napoleon configuration
 
 napoleon_numpy_docstring = True
-napoleon_google_docstring = True
+napoleon_google_docstring = False
 napoleon_include_init_with_doc = True
 napoleon_include_private_with_doc = False
 napoleon_include_special_with_doc = True
 napoleon_use_admonition_for_examples = True
 napoleon_use_admonition_for_notes = True
 napoleon_use_admonition_for_references = True
+napoleon_attr_annotations = True
 napoleon_preprocess_types = True
 napoleon_use_rtype = True
 napoleon_type_aliases = {
-    "np.ndarray": "~numpy.ndarray",
-    "ndarray": "~numpy.ndarray",
-    "ArrayLike": "~numpy.typing.ArrayLike",
-    "plt.Axes": "~matplotlib.axes.Axes",
-    "Literal": "~typing.Literal",
+    "np.ndarray": "`~numpy.ndarray`",
+    "ndarray": "`~numpy.ndarray`",
+    "ArrayLike": "`~numpy.typing.ArrayLike`",
+    "plt.Axes": "`~matplotlib.axes.Axes`",
+    "Literal": "`~typing.Literal`",
+    "Self": "`~typing.Self`",
+    "Iterable": "`~collections.abc.Iterable`",
+    "OpticalElement": "`~optical_diagram.OpticalElement`",
+    "OpticalSystem": "`~optical_diagram.OpticalSystem`",
+    "Group": "`~optical_diagram.Group`",
+    "Fiber": "`~optical_diagram.Fiber`",
+    "Point": "`~optical_diagram.Point`",
 }
 napoleon_custom_sections = [("See also", "See Also")]
-
 
 
 # %% -- autoapi settings ------------------------------------------------------
@@ -122,6 +129,7 @@ autoapi_options = [
     "show-module-summary",
     "special-members",
     "imported-members",
+    "inherited-members",
 ]
 autoapi_own_page_level = "class"
 autoapi_member_order = "bysource"
@@ -138,6 +146,7 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
 }
+intersphinx_resolve_self = ""
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
