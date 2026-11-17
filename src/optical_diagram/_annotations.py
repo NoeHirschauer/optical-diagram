@@ -119,8 +119,9 @@ class Circle(OpticalElement):
             self._style.setdefault(k, v)
 
     def _get_local_points(self):
-        # A point has no extent, but provides the center for the artist
-        return np.array([[0, 0]])
+        # Get 100 points around the circle for boundary calculations
+        theta = np.linspace(0, 2 * np.pi, 100)
+        return np.array([self.radius * np.cos(theta), self.radius * np.sin(theta)]).T
 
     def _get_mpl_artist(self):
 
