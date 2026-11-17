@@ -29,9 +29,9 @@ class Fiber(OpticalElement):
         """
         Parameters
         ----------
-        start : ArrayLike | OpticalElement
+        start : ArrayLike or OpticalElement
             Starting coordinates or an element with .center used as start position.
-        end : ArrayLike | OpticalElement
+        end : ArrayLike or OpticalElement
             Ending coordinates or an element with .center used as end position.
         angle_start : float, optional
             Tangent angle at the start point in degrees. Default is 0.0.
@@ -154,7 +154,7 @@ class Fiber(OpticalElement):
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         self._show_start = start
@@ -237,7 +237,7 @@ class FiberSplitter(Group):
         """
         Parameters
         ----------
-        input_pos : ArrayLike | OpticalElement
+        input_pos : ArrayLike or OpticalElement
             Input coordinates or an element with .center used as input position.
         axis : ArrayLike, optional
             Axial direction from outputs toward the input. Defaults to RIGHT
@@ -459,7 +459,7 @@ class FiberSplitter(Group):
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         self.length = value
@@ -477,7 +477,7 @@ class FiberSplitter(Group):
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         self.height = value
@@ -495,7 +495,7 @@ class FiberSplitter(Group):
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         self.alignment = value
@@ -519,7 +519,7 @@ class FiberSplitter(Group):
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         self._show_input = input
@@ -540,7 +540,7 @@ class FiberSplitter(Group):
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         self._show_labels = True
@@ -585,7 +585,7 @@ class FiberSplitter(Group):
 
         Parameters
         ----------
-        position : ArrayLike | OpticalElement
+        position : ArrayLike or OpticalElement
             Target location for the input point. May be an object with a
             ``center`` attribute or an array-like ``(x, y)`` coordinate.
         """
@@ -652,7 +652,7 @@ class FiberCoupler(Group):
         """
         Parameters
         ----------
-        position : ArrayLike | OpticalElement
+        position : ArrayLike or OpticalElement
             Center position of the coupler.
         axis : ArrayLike, optional
             Axial direction from inputs to outputs. Default is RIGHT.
@@ -895,7 +895,7 @@ class FiberCoupler(Group):
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         self._show_in_a = in_a
@@ -940,7 +940,7 @@ class FiberCoupler(Group):
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         self._show_labels = True

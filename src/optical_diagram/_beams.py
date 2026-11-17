@@ -21,7 +21,7 @@ class SimpleBeam(OpticalElement):
         """
         Parameters
         ----------
-        elements : Iterable[OpticalElement]
+        elements : Iterable of OpticalElement
             The sequence of optical elements the beam passes through.
         **kwargs : dict, optional
             Additional styling options for the beam. Passed to the underlying
@@ -71,9 +71,9 @@ class DivergingBeam(OpticalElement):
         """
         Parameters
         ----------
-        elements : Iterable[OpticalElement]
+        elements : Iterable of OpticalElement
             The sequence of optical elements the beam passes through.
-        offsets : Iterable[float]
+        offsets : Iterable of float
             The half-widths of the beam at each optical element. Must be the same length
             as `elements`.
         **kwargs : dict, optional
@@ -134,7 +134,7 @@ class RayTracedBeam(OpticalElement):
         """
         Parameters
         ----------
-        elements : Iterable[OpticalElement]
+        elements : Iterable of OpticalElement
             The sequence of optical elements the beam passes through.
         initial_width : float, optional
             The initial width of the beam. Defaults to 0.

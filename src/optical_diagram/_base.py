@@ -25,25 +25,25 @@ __all__ = [  # noqa: RUF022
 ]
 
 # Constants
-RIGHT = np.array((1.0, 0.0))
-"""np.ndarray: Unit vector pointing to the right ``(1, 0)``."""
-LEFT = np.array((-1.0, 0.0))
-"""np.ndarray: Unit vector pointing to the left ``(-1, 0)``."""
-UP = np.array((0.0, 1.0))
-"""np.ndarray: Unit vector pointing up ``(0, 1)``."""
-DOWN = np.array((0.0, -1.0))
-"""np.ndarray: Unit vector pointing down ``(0, -1)``."""
-ORIGIN = np.array((0.0, 0.0))
-"""np.ndarray: The origin ``(0, 0)``."""
+RIGHT: np.ndarray = np.array((1.0, 0.0))
+"""Unit vector pointing to the right ``(1, 0)``."""
+LEFT: np.ndarray = np.array((-1.0, 0.0))
+"""Unit vector pointing to the left ``(-1, 0)``."""
+UP: np.ndarray = np.array((0.0, 1.0))
+"""Unit vector pointing up ``(0, 1)``."""
+DOWN: np.ndarray = np.array((0.0, -1.0))
+"""Unit vector pointing down ``(0, -1)``."""
+ORIGIN: np.ndarray = np.array((0.0, 0.0))
+"""The origin ``(0, 0)``."""
 
-UR = UP + RIGHT
-"""np.ndarray: Vector pointing up and to the right ``(1, 1)``."""
-UL = UP + LEFT
-"""np.ndarray: Vector pointing up and to the left ``(-1, 1)``."""
-DR = DOWN + RIGHT
-"""np.ndarray: Vector pointing down and to the right ``(1, -1)``."""
-DL = DOWN + LEFT
-"""np.ndarray: Vector pointing down and to the left ``(-1, -1)``."""
+UR: np.ndarray = UP + RIGHT
+"""Vector pointing up and to the right ``(1, 1)``."""
+UL: np.ndarray = UP + LEFT
+"""Vector pointing up and to the left ``(-1, 1)``."""
+DR: np.ndarray = DOWN + RIGHT
+"""Vector pointing down and to the right ``(1, -1)``."""
+DL: np.ndarray = DOWN + LEFT
+"""Vector pointing down and to the left ``(-1, -1)``."""
 
 
 class OpticalElement(ABC):
@@ -66,16 +66,16 @@ class OpticalElement(ABC):
         """
         Parameters
         ----------
-        position : ArrayLike | `OpticalElement`
+        position : ArrayLike or OpticalElement
             The (x, y) coordinates of the center. Can be a sequence of 2 numbers or an
-            instance of `OpticalElement`. If an `OpticalElement` is passed, its center
-            will be used. Defaults to ``(0,0)``
+            instance of `~optical_diagram.OpticalElement` whose `center` coordinates
+            will be used. Defaults to `~optical_diagram.ORIGIN` = ``(0, 0)``.
         size : float
             Characteristic size (diameter for lens, side for square). Defaults to ``1.0``
         angle : float
             Rotation angle in degrees. Defaults to ``0.0``
         **kwargs
-            Style arguments passed to the matplotlib patch (color, alpha, etc).
+            Style arguments passed to `matplotlib.patches.Patch` (color, alpha, etc).
         """
         if isinstance(position, OpticalElement):
             _position = position.center
@@ -118,7 +118,7 @@ class OpticalElement(ABC):
     # -------------------------------------------------------------------------
     @property
     def center(self) -> np.ndarray:
-        """The current (x, y) center of the element.
+        """The current (`x`, `y`) center of the element.
 
         This property can be set directly to move the element, or it can be modified via
         the `move_to`, `shift`, `rotate`, `flip`, and `scale` methods for chainable
@@ -132,7 +132,7 @@ class OpticalElement(ABC):
 
     @property
     def x(self) -> float:
-        """The current x-coordinate of the element's center."""
+        """The current x-coordinate of the element's `center`."""
         return self._center[0]
 
     @x.setter
@@ -141,7 +141,7 @@ class OpticalElement(ABC):
 
     @property
     def y(self) -> float:
-        """The current y-coordinate of the element's center."""
+        """The current y-coordinate of the element's `center`."""
         return self._center[1]
 
     @y.setter
@@ -187,14 +187,14 @@ class OpticalElement(ABC):
     # Geometric Utilities (Anchors)
     # -------------------------------------------------------------------------
     def _get_rotation_matrix(self) -> np.ndarray:
-        """Get the 2D rotation matrix based on the element's angle.
+        """Get the 2D rotation matrix based on the element's `angle`.
 
         Returns
         -------
         np.ndarray
             A 2x2 rotation matrix.
         """
-        theta = np.deg2rad(self._angle)
+        theta = np.deg2rad(self.angle)
         return np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
 
     def _get_local_points(self) -> np.ndarray:
@@ -225,7 +225,7 @@ class OpticalElement(ABC):
         return (rot @ local_pts.T).T + self.center
 
     def get_boundary_box(self) -> tuple[float, float, float, float]:
-        """Returns (min_x, min_y, max_x, max_y) of the element."""
+        """Returns (min_x, min_y, max_x, max_y) of the element's bounding box."""
         pts = self._get_critical_points()
         return np.min(pts[:, 0]), np.min(pts[:, 1]), np.max(pts[:, 0]), np.max(pts[:, 1])
 
@@ -252,22 +252,21 @@ class OpticalElement(ABC):
     # Physical Utilities (for ray tracing)
     # -------------------------------------------------------------------------
     def get_normal_vector(self) -> np.ndarray:
-        """Returns the normal vector of the element plane."""
-        theta = np.deg2rad(self._angle)
+        """Returns a vector normal to the element's plane."""
+        theta = np.deg2rad(self.angle)
         # Assuming element lies along local Y, normal is along local X
         # Rotated by theta:
         return np.array([np.cos(theta), np.sin(theta)])
 
     def get_direction_vector(self) -> np.ndarray:
         """Returns the vector pointing along the element's surface."""
-        theta = np.deg2rad(self._angle)
+        theta = np.deg2rad(self.angle)
         return np.array([-np.sin(theta), np.cos(theta)])
 
     def _intersect(
         self, ray_origin: ArrayLike, ray_direction: ArrayLike
     ) -> np.ndarray | None:
-        r"""
-        Calculate intersection point of a ray with this element's plane.
+        r"""Calculate intersection point of a ray with this element's plane.
 
         Parameters
         ----------
@@ -361,13 +360,13 @@ class OpticalElement(ABC):
 
         Parameters
         ----------
-        target : ArrayLike | `OpticalElement`
-            The point (x, y) to move to, or an `OpticalElement` whose center coordinates
-            will be used as target
+        target : ArrayLike or OpticalElement
+            The point ``(x, y)`` to move to, or an `~optical_diagram.OpticalElement`
+            whose `center` coordinates will be used as target
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         if isinstance(target, OpticalElement):
@@ -387,7 +386,8 @@ class OpticalElement(ABC):
 
         Returns
         -------
-        self
+        Self
+            The instance itself (for chaining).
         """
         self.center = self.center + np.asarray(vector)
         return self
@@ -403,13 +403,14 @@ class OpticalElement(ABC):
         ----------
         angle_degrees : float
             Angle to add to current rotation.
-        about_point : ArrayLike | `OpticalElement` | None, optional
-            Point to rotate about. If an `OpticalElement` is provided, its center is used
-            as the pivot point. If None, rotates about self.center. Defaults to None.
+        about_point : ArrayLike or OpticalElement or None, optional
+            Point to rotate about. If an `~optical_diagram.OpticalElement` is provided,
+            its `center` is used as the pivot point. If None, rotates about `self.
+            center`. Defaults to None.
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         self._angle += angle_degrees
@@ -441,16 +442,17 @@ class OpticalElement(ABC):
         Parameters
         ----------
         axis : ArrayLike
-            Vector defining the line of reflection (e.g., `UP` for vertical flip,
-            `RIGHT` for horizontal flip). Defaults to `UP`.
-        about_point : ArrayLike | `OpticalElement` | None, optional
-            Point the reflection axis passes through. If an `OpticalElement`
-            is provided, its center is used. If None, flips about self.center.
-            Defaults to None.
+            Vector defining the line of reflection (e.g., `~optical_diagram.UP` for
+            vertical flip, `~optical_diagram.RIGHT` for horizontal flip).
+            Defaults to `~optical_diagram.UP`.
+        about_point : ArrayLike or OpticalElement or None, optional
+            Point the reflection axis passes through.
+            If an `~optical_diagram.OpticalElement` is provided, its `center` is used.
+            If None, flips about the instance's `center`. Defaults to None.
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         # 1. Resolve the pivot (about_point)
@@ -491,14 +493,14 @@ class OpticalElement(ABC):
         ----------
         scale_factor : float
             Factor to multiply the current size by.
-        about_point : ArrayLike | `OpticalElement` | None, optional
+        about_point : ArrayLike or OpticalElement or None, optional
             The reference point for the scaling operation.
-            If an `OpticalElement` is provided, its center is used.
-            If None, the element scales in place (about its own center).
+            If an `~optical_diagram.OpticalElement` is provided, its `center` is used.
+            If None, the element scales about its own `center`.
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         # 1. Update the internal size
@@ -525,16 +527,17 @@ class OpticalElement(ABC):
 
         Parameters
         ----------
-        other : `OpticalElement`
+        other : OpticalElement
             The reference element.
         direction : ArrayLike
-            Direction to place this element (e.g. RIGHT).
+            Direction to place this element relative to the other element.
+            Defaults to `~optical_diagram.RIGHT`.
         buff : float
             Buffer distance. Defaults to 0
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         target_point = other.get_edge(direction)
@@ -581,7 +584,7 @@ class OpticalElement(ABC):
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
 
         Note
@@ -601,7 +604,7 @@ class OpticalElement(ABC):
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         self.facecolor = color
@@ -617,7 +620,7 @@ class OpticalElement(ABC):
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         self.edgecolor = color
@@ -633,7 +636,7 @@ class OpticalElement(ABC):
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         self._style.update(kwargs)
@@ -654,15 +657,13 @@ class OpticalElement(ABC):
 
 
 class OpticalSystem(OpticalElement):
-    """
-    Abstract base class for optical elements that can have a focal length.
-    """
+    """Abstract base class for optical elements that can have a focal length."""
 
     def __init__(self, position=ORIGIN, size=1, angle=0.0, focal_length=None, **kwargs):
         self._focal_length = focal_length
         super().__init__(position, size, angle, **kwargs)
 
-        # Default styles (use setdefault so we don't clobber mapping applied in base class)
+        # Default styles
         defaults = {
             "edgecolor": "k",
             "facecolor": "none",
@@ -681,7 +682,7 @@ class OpticalSystem(OpticalElement):
 
     @property
     def focal_length(self) -> float | None:
-        """float or None: The focal length of the optical system.
+        """The focal length of the optical system.
 
         If None, the element has no focusing power.
         """
@@ -695,15 +696,15 @@ class OpticalSystem(OpticalElement):
 class Group(OpticalElement):
     """A collection of OpticalElements treated as a single unit.
 
-    Transformations applied to the group (move, rotate, scale, etc.) are delegated to all
-    contained elements.
+    Transformations applied to the group (`move`, `rotate`, `scale`, etc.) are delegated
+    to all contained elements.
     """
 
     def __init__(self, elements: Iterable[OpticalElement], **kwargs):
         """
         Parameters
         ----------
-        elements : Iterable[OpticalElement]
+        elements : Iterable of OpticalElement
             The elements to include in the group.
         **kwargs
             Additional keyword arguments to pass to the base class.
@@ -739,7 +740,8 @@ class Group(OpticalElement):
         Parameters
         ----------
         *elements
-            One or more :class:`OpticalElement` instances to be added to the group.
+            One or more `~optical_diagram.OpticalElement` instances to be added to the
+            group.
         """
         self.elements.extend(elements)
 
