@@ -176,8 +176,7 @@ table = OpticalTable(
 table.add(*_elements, *_beams, *_labels)
 
 # customize appearance: hide ticks, show grid
-table.hide_ticks().show_grid(visible=True, alpha=0.15)
+table.hide_ticks().show_grid_lines(visible=True, alpha=0.15)
 
 # render and display
 table.show()
-

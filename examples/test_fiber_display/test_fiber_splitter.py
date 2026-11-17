@@ -25,7 +25,7 @@ from optical_diagram import DOWN, LEFT, RIGHT, UP, FiberSplitter, OpticalTable
 # - Middle column: alignment set after creation via setter
 # - Right column: alignment set after creation via method
 
-table = OpticalTable(size=(15, 6), title="Test: All Alignments").show_grid()
+table = OpticalTable(size=(15, 6), title="Test: All Alignments").show_grid_dots(size=2)
 
 default_splitter_params = {
     "axis": RIGHT,
@@ -103,7 +103,9 @@ table.show()
 # - Middle column: height/length set after creation via setter
 # - Right column: height/length set after creation via method
 
-table = OpticalTable(size=(15, 10), title="Test: Height and Length Changes").show_grid()
+table = OpticalTable(
+    size=(15, 10), title="Test: Height and Length Changes"
+).show_grid_dots(size=2)
 
 # at initialization
 s1 = FiberSplitter(
@@ -186,7 +188,9 @@ table.show()
 # - 4th column: `flip` method
 
 
-table = OpticalTable(size=(18, 6), title="Test: Complex Transforms").show_grid()
+table = OpticalTable(size=(18, 6), title="Test: Complex Transforms").show_grid_dots(
+    size=2
+)
 
 # shift & test that geometry is correctly updated after shift
 s1 = (

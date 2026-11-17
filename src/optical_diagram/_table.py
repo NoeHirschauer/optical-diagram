@@ -1,4 +1,5 @@
-from typing import Literal
+from collections.abc import Iterable
+from typing import Literal, Self
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,8 +8,7 @@ from ._base import OpticalElement
 
 
 class OpticalTable:
-    """
-    The main container for the optical setup.
+    """The main container for the optical setup.
 
     Parameters
     ----------
@@ -30,12 +30,12 @@ class OpticalTable:
 
     def __init__(
         self,
-        size=(10, 10),
+        size: tuple[float, float] = (10, 10),
         units: Literal["inches", "cm"] = "cm",
-        title="Optical Setup",
+        title: str = "Optical Setup",
         mode: Literal["axial", "top-down"] = "top-down",
-        scale_factor=1,
-        dpi=100,
+        scale_factor: float = 1,
+        dpi: int = 100,
     ):
         self.w, self.h = size
         self.mode = mode
@@ -68,8 +68,18 @@ class OpticalTable:
         else:
             raise ValueError("``mode`` should be one of 'axial' or 'top-down'")
 
-    def add(self, *elements):
-        """Add one or multiple OpticalElements to the table."""
+    def add(self, *elements: Iterable[OpticalElement]) -> Self:
+        """Add one or multiple `OpticalElements` to the table.
+
+        Parameters
+        ----------
+        elements : Iterable of OpticalElement
+            The sequence of optical elements to add to the table.
+        Returns
+        -------
+        Self
+            The instance itself (for chaining).
+        """
         for el in elements:
             if isinstance(el, OpticalElement):
                 self.elements.append(el)
@@ -77,30 +87,81 @@ class OpticalTable:
                 raise TypeError(f"Expected OpticalElement, got {type(el)}")
         return self
 
-    def show_grid(self, visible=True, alpha=0.2):
+    def show_grid_lines(
+        self, visible: bool = True, alpha: float = 0.2, step: float = 1.0
+    ) -> Self:
         """Toggle the background grid.
 
+        Parameters
+        ----------
+        visible : bool
+            Whether to show the grid lines (default: True).
+        alpha : float
+            Transparency of the grid lines (default: 0.2).
+        step : float
+            Spacing between grid lines (default: 1.0).
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         if visible:
             self.ax.grid(visible, alpha=alpha)
-            self.ax.set_xticks(np.arange(-self.w / 2, self.w / 2 + 1, 1))
-            self.ax.set_yticks(np.arange(-self.h / 2, self.h / 2 + 1, 1))
+            self.ax.set_xticks(np.arange(-self.w / 2, self.w / 2 + 1, step))
+            self.ax.set_yticks(np.arange(-self.h / 2, self.h / 2 + 1, step))
         return self
 
-    def hide_ticks(self):
+    def show_grid_dots(
+        self,
+        visible: bool = True,
+        alpha: float = 0.5,
+        step: float = 1.0,
+        size: float = 1.0,
+        **kwargs,
+    ) -> Self:
+        """Toggle the background dots at the grid intersections.
+
+        Parameters
+        ----------
+        visible : bool
+            Whether to show the dots (default: True).
+        alpha : float
+            Transparency of the dots (default: 0.5).
+        step : float
+            Spacing between dots (default: 1.0).
+        size : float
+            Size of the dots (default: 1.0).
+        **kwargs : dict, optional
+            Additional styling options passed to `matplotlib.pyplot.scatter`.
+        Returns
+        -------
+        Self
+            The instance itself (for chaining).
         """
-        Remove tick numbers and tick marks from both axes.
+        default_kwargs = {"color": "gray", "marker": ".", "linewidths": 0, "zorder": -10}
+        kwargs = {**default_kwargs, **kwargs}
+
+        if visible:
+            self.ax.scatter(
+                *np.meshgrid(
+                    np.arange(-self.w / 2, self.w / 2 + 1, step),
+                    np.arange(-self.h / 2, self.h / 2 + 1, step),
+                ),
+                alpha=alpha,
+                s=size,
+                **kwargs,
+            )
+        return self
+
+    def hide_ticks(self) -> Self:
+        """Remove tick numbers and tick marks from both axes.
 
         This keeps the grid visible (if enabled) but removes the
         numerical labels and the small marks on the spine.
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         self.ax.tick_params(
@@ -115,13 +176,12 @@ class OpticalTable:
         )
         return self
 
-    def hide_axis_labels(self):
-        """
-        Removes the axis labels (X, Y)
+    def hide_axis_labels(self) -> Self:
+        """Removes the axis labels (X, Y)
 
         Returns
         -------
-        self
+        Self
             The instance itself (for chaining).
         """
         self.ax.set_xlabel(None)

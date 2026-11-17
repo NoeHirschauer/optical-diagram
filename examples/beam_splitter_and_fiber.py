@@ -11,7 +11,7 @@ beam into two paths, one of which is coupled into an optical fiber leading to a 
 
 We demonstrate how to use the `BeamSplitter` and `Fiber` elements, as well as raytracing
 to properly position the fiber at the output of the optical system. We also illustrate
-how to use the `.color` property to color rays consistently.
+how to use the ``.color`` property to color rays consistently.
 """
 
 from optical_diagram import (
@@ -31,7 +31,7 @@ from optical_diagram import (
     Rectangle,
 )
 
-table = OpticalTable(size=(15, 8), dpi=300, title="Example setup").show_grid()
+table = OpticalTable(size=(15, 8), dpi=300, title="Example setup").show_grid_lines()
 
 starting_position = (-6, 2)
 
