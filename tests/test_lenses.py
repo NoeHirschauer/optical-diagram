@@ -41,19 +41,19 @@ def test_lens_on_axis_interaction_and_normalized_output():
     ray_origin = np.array([-1.0, 0.0])
     ray_direction = RIGHT
 
-    inter = c_lens.intersect(ray_origin, ray_direction)
+    inter = c_lens._intersect(ray_origin, ray_direction)
     assert inter is not None
 
-    new_dir = c_lens.interact(inter, ray_direction)
+    new_dir = c_lens._interact(inter, ray_direction)
     assert pytest.approx(np.linalg.norm(new_dir), rel=1e-6) == 1.0
 
     # Diverging lens must also produce a unit vector, unchanged direction
     d_lens = DivergingLens(position=(0.0, 0.0), size=2.0, focal_length=-1.0)
 
-    inter2 = d_lens.intersect(ray_origin, ray_direction)
+    inter2 = d_lens._intersect(ray_origin, ray_direction)
     assert inter2 is not None
 
-    new_dir2 = d_lens.interact(inter2, ray_direction)
+    new_dir2 = d_lens._interact(inter2, ray_direction)
     assert pytest.approx(np.linalg.norm(new_dir2), rel=1e-6) == 1.0
 
 
@@ -66,12 +66,12 @@ def test_lens_off_axis_interaction_and_normalized_output():
     ray_origin = np.array([-1.0, 0.5])
     ray_direction = RIGHT
 
-    inter = c_lens.intersect(ray_origin, ray_direction)
+    inter = c_lens._intersect(ray_origin, ray_direction)
     assert inter is not None
 
     # the theoretical new direction should be a vector from the intersection
     # to the focal point
-    new_dir = c_lens.interact(inter, ray_direction)
+    new_dir = c_lens._interact(inter, ray_direction)
     new_dir_th = np.array([1.0, -0.5])  # from (0,0.5) to (1,0)
     new_dir_th /= np.linalg.norm(new_dir_th)
     assert pytest.approx(np.linalg.norm(new_dir), rel=1e-6) == 1.0
@@ -80,11 +80,11 @@ def test_lens_off_axis_interaction_and_normalized_output():
     # Diverging lens must also produce a unit vector
     d_lens = DivergingLens(position=(0.0, 0.0), size=2.0, focal_length=-1.0)
 
-    inter2 = d_lens.intersect(ray_origin, ray_direction)
+    inter2 = d_lens._intersect(ray_origin, ray_direction)
     assert inter2 is not None
 
     # for a diverging lens, the new direction should point away from the focal point
-    new_dir2 = d_lens.interact(inter2, ray_direction)
+    new_dir2 = d_lens._interact(inter2, ray_direction)
     new_dir2_th = np.array([1.0, 0.5])  # from (-1,0) to (0,0.5)
     new_dir2_th /= np.linalg.norm(new_dir2_th)
     assert pytest.approx(np.linalg.norm(new_dir2), rel=1e-6) == 1.0
@@ -102,11 +102,11 @@ def test_lens_angled_interaction_and_normalized_output():
     ray_direction = np.array([1.0, 1.0]) / np.sqrt(2)
 
     # this should intersect at (0,-1)
-    inter = c_lens.intersect(ray_origin, ray_direction)
+    inter = c_lens._intersect(ray_origin, ray_direction)
     assert inter is not None
     assert np.allclose(inter, np.array([0.0, -1.0]))
 
-    new_dir = c_lens.interact(inter, ray_direction)
+    new_dir = c_lens._interact(inter, ray_direction)
     assert pytest.approx(np.linalg.norm(new_dir), rel=1e-6) == 1.0
 
     # According to paraxial geometric optics, the ray should intersect the image focal
@@ -121,11 +121,11 @@ def test_lens_angled_interaction_and_normalized_output():
     # Diverging lens must also produce a unit vector
     d_lens = DivergingLens(position=(0.0, 0.0), size=2.0, focal_length=-2.0)
 
-    inter2 = d_lens.intersect(ray_origin, ray_direction)
+    inter2 = d_lens._intersect(ray_origin, ray_direction)
     assert inter2 is not None
     assert np.allclose(inter2, np.array([0.0, -1.0]))  # similar intersection
 
-    new_dir2 = d_lens.interact(inter2, ray_direction)
+    new_dir2 = d_lens._interact(inter2, ray_direction)
     assert pytest.approx(np.linalg.norm(new_dir2), rel=1e-6) == 1.0
 
     # According to paraxial geometric optics, this ray should intersect the image focal
@@ -158,9 +158,9 @@ def test_lens_with_raytracedbeam_and_table_renders():
     lens = ConvergingLens(position=(0.0, 0.0), size=2.0, focal_length=1.0)
 
     # The lens should intersect the beam's central ray and interact without error
-    inter = lens.intersect(p0.center, RIGHT)
+    inter = lens._intersect(p0.center, RIGHT)
     if inter is not None:
-        out = lens.interact(inter, RIGHT)
+        out = lens._interact(inter, RIGHT)
         assert pytest.approx(np.linalg.norm(out), rel=1e-6) == 1.0
 
     # Ensure artists exist and OpticalTable.render does not raise

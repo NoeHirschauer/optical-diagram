@@ -10,11 +10,11 @@ __all__ = ["PlaneMirror", "ConcaveMirror", "ConvexMirror", "BeamSplitter"]  # no
 class _Mirror(OpticalSystem):
     """Base class for all mirrors (Plane, Concave, Convex)."""
 
-    def get_local_points(self):
+    def _get_local_points(self):
         h = self._size / 2.0
         return np.array([[0, -h], [0, h]])
 
-    def interact(self, ray_origin, ray_direction, next_element_center=None):
+    def _interact(self, ray_origin, ray_direction, next_element_center=None):
         r"""Calculate the new ray direction after reflecting off the mirror.
 
         Uses the same paraxial approximation as lenses, but adds the reflection
@@ -38,7 +38,7 @@ class _Mirror(OpticalSystem):
         reflection
         """
 
-        normal = self.get_normal()
+        normal = self.get_normal_vector()
         if np.dot(ray_direction, normal) > 0:
             normal = -normal
         mirror_vec = self.get_direction_vector()
@@ -64,7 +64,7 @@ class PlaneMirror(_Mirror):
         super().__init__(position, size, angle, focal_length=np.inf, **kwargs)
 
     def _get_mpl_artist(self):
-        pts = self.get_critical_points()
+        pts = self._get_critical_points()
         style = self._style.copy()
         style.setdefault("arrowstyle", "-")
         return FancyArrowPatch(pts[0], pts[1], **style)
@@ -81,7 +81,7 @@ class ConcaveMirror(_Mirror):
         super().__init__(position or (0, 0), size, angle, focal_length, **kwargs)
 
     def _get_mpl_artist(self):
-        pts = self.get_critical_points()
+        pts = self._get_critical_points()
         style = self._style.copy()
         style.setdefault("arrowstyle", "]-")
         return FancyArrowPatch(pts[0], pts[1], **style)
@@ -98,7 +98,7 @@ class ConvexMirror(_Mirror):
         super().__init__(position or (0, 0), size, angle, focal_length, **kwargs)
 
     def _get_mpl_artist(self):
-        pts = self.get_critical_points()
+        pts = self._get_critical_points()
         style = self._style.copy()
         style.setdefault("arrowstyle", "-[")
         return FancyArrowPatch(pts[0], pts[1], **style)
@@ -110,13 +110,13 @@ class BeamSplitter(OpticalSystem):
     By default, the diagonal splits the cube from bottom-left to top-right.
     """
 
-    def get_normal(self):
+    def get_normal_vector(self):
         # Normal of the diagonal (45 deg offset)
         theta = np.deg2rad(self.angle + 135)
         return np.array([np.cos(theta), np.sin(theta)])
 
-    def intersect(self, ray_origin, ray_direction):
-        normal = self.get_normal()
+    def _intersect(self, ray_origin, ray_direction):
+        normal = self.get_normal_vector()
 
         denom = np.dot(ray_direction, normal)
         if np.isclose(denom, 0):
@@ -134,7 +134,7 @@ class BeamSplitter(OpticalSystem):
         
         return intersection
 
-    def interact(self, ray_origin, ray_direction, next_element_center=None):
+    def _interact(self, ray_origin, ray_direction, next_element_center=None):
         r"""Calculate the new ray direction after interacting with the beam splitter.
 
         The beam splitter either reflects or transmits the ray, depending on which
@@ -157,7 +157,7 @@ class BeamSplitter(OpticalSystem):
 
         # 2. Calculate Reflection path
         # R = I - 2(I.N)N
-        normal = self.get_normal()
+        normal = self.get_normal_vector()
         # Ensure normal faces incoming ray
         if np.dot(ray_direction, normal) > 0:
             normal = -normal
@@ -177,14 +177,14 @@ class BeamSplitter(OpticalSystem):
         else:
             return trans_dir
 
-    def get_local_points(self):
+    def _get_local_points(self):
         # Square corners + diagonal
         h = self._size / 2.0
         return np.array([[-h, -h], [h, -h], [h, h], [-h, h]])
 
     def _get_mpl_artist(self):
         # 1. Square
-        pts = self.get_critical_points()
+        pts = self._get_critical_points()
 
         # 2. Diagonal (connects bottom-left to top-right in local space)
         diagonal = np.array([pts[0], pts[2]])

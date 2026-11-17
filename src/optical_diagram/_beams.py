@@ -1,6 +1,9 @@
+from collections.abc import Iterable
+
 import numpy as np
 from matplotlib.collections import PolyCollection
-from matplotlib.patches import Polygon as MplPolygon
+from matplotlib.pyplot import Axes
+from matplotlib.pyplot import Polygon as MplPolygon
 
 from ._base import OpticalElement
 
@@ -8,29 +11,40 @@ __all__ = ["SimpleBeam", "DivergingBeam", "RayTracedBeam"]  # noqa: RUF022
 
 
 class SimpleBeam(OpticalElement):
-    """
-    A simple line beam that passes through the centers of provided elements.
+    """A simple line beam that passes through the centers of provided elements.
+
+    There is no physics logic applied to this beam, it is simply a visual representation
+    of a beam path.
     """
 
-    def __init__(self, elements, **kwargs):
+    def __init__(self, elements: Iterable[OpticalElement], **kwargs):
+        """
+        Parameters
+        ----------
+        elements : Iterable[OpticalElement]
+            The sequence of optical elements the beam passes through.
+        **kwargs : dict, optional
+            Additional styling options for the beam. Passed to the underlying
+            `plt.Polygon` artist.
+        """
         self.elements = elements
         kwargs.setdefault("edgecolor", "C0")
         kwargs.setdefault("linewidth", 1.0)
         kwargs.setdefault("facecolor", "none")
         super().__init__(elements[0].center, 0, **kwargs)
 
-    def get_path_points(self):
+    def _get_path_points(self):
         return np.array([el.center for el in self.elements])
 
     def _get_mpl_artist(self):
-        pts = self.get_path_points()
+        pts = self._get_path_points()
         return MplPolygon(pts, closed=False, **self._style)
 
-     # SimpleBeam is a simple line - treat `color` as edgecolor
+    # SimpleBeam is a simple line - treat `color` as edgecolor
     @property
     def color(self):
         return self._style.get("edgecolor", None)
-    
+
     @color.setter
     def color(self, value):
         if value is None:
@@ -40,12 +54,32 @@ class SimpleBeam(OpticalElement):
             self._style["edgecolor"] = value
             self._style.pop("color", None)
 
+
 class DivergingBeam(OpticalElement):
-    """
-    A beam with variable width defined by offsets at each optical element.
+    """A beam with variable width defined by offsets at each optical element.
+
+    This is a simple visual representation of a beam path, with no physics logic applied.
+    The beam is defined by a list of offsets (half-widths) at each optical element
     """
 
-    def __init__(self, elements, offsets, **kwargs):
+    def __init__(
+        self,
+        elements: Iterable[OpticalElement],
+        offsets: Iterable[float],
+        **kwargs,
+    ):
+        """
+        Parameters
+        ----------
+        elements : Iterable[OpticalElement]
+            The sequence of optical elements the beam passes through.
+        offsets : Iterable[float]
+            The half-widths of the beam at each optical element. Must be the same length
+            as `elements`.
+        **kwargs : dict, optional
+            Additional styling options for the beam. Passed to the underlying
+            `plt.Polygon` artist.
+        """
         self.elements = elements
         self.offsets = np.asarray(offsets)
         kwargs.setdefault("color", "C0")
@@ -84,18 +118,25 @@ class RayTracedBeam(OpticalElement):
     from the edges of the beam through each optical element in sequence, adjusting
     their directions based on the element's interaction rules.
 
-    For this to work correctly, all elements must implement `intersect` and `interact`.
+    For this to work correctly, all elements must implement `_intersect` and `_interact`.
     Notably, for lenses and mirrors, these methods are only valid if they have a defined
     focal length.
+
     """
 
-    def __init__(self, elements, initial_width=0, divergence=0.0, **kwargs):
+    def __init__(
+        self,
+        elements: Iterable[OpticalElement],
+        initial_width: float = 0,
+        divergence: float = 0.0,
+        **kwargs,
+    ):
         """
         Parameters
         ----------
-        elements : iterable of OpticalElement
+        elements : Iterable[OpticalElement]
             The sequence of optical elements the beam passes through.
-        initial_width : int, optional
+        initial_width : float, optional
             The initial width of the beam. Defaults to 0.
         divergence : float, optional
             The divergence (half-angle) of the beam in degrees. Defaults to 0.0.
@@ -159,11 +200,11 @@ class RayTracedBeam(OpticalElement):
 
         # 2. Iterate through gaps between elements
         for i in range(len(self.elements) - 1):
-            next_el = self.elements[i + 1]
+            next_el: OpticalElement = self.elements[i + 1]
 
             # Find intersections for both rays with the next element
-            t_hit = next_el.intersect(t_pos, t_dir)
-            b_hit = next_el.intersect(b_pos, b_dir)
+            t_hit = next_el._intersect(t_pos, t_dir)
+            b_hit = next_el._intersect(b_pos, b_dir)
 
             # Fallback projection if rays miss the physical aperture (for visualization)
             if t_hit is None or b_hit is None:
@@ -191,8 +232,8 @@ class RayTracedBeam(OpticalElement):
             future_pos = (
                 self.elements[i + 2].center if i + 2 < len(self.elements) else None
             )
-            t_dir = next_el.interact(t_hit, t_dir, future_pos)
-            b_dir = next_el.interact(b_hit, b_dir, future_pos)
+            t_dir = next_el._interact(t_hit, t_dir, future_pos)
+            b_dir = next_el._interact(b_hit, b_dir, future_pos)
 
             # The hit points on this surface become the start points for the next gap
             t_pos, b_pos = t_hit, b_hit
@@ -209,13 +250,13 @@ class RayTracedBeam(OpticalElement):
 
         return PolyCollection(polys, **style)
 
-    def draw(self, ax):
+    def draw(self, ax: Axes):
         # Override draw to add PolyCollection instead of Patch
         artist = self._get_mpl_artist()
         ax.add_collection(artist)
         return artist
 
-    def get_intersection_with(self, element):
+    def _get_intersection_with(self, element: OpticalElement) -> np.ndarray:
         """
         Return the center point between the two marginal-ray intersections of this beam
         with the provided OpticalElement.
@@ -228,7 +269,7 @@ class RayTracedBeam(OpticalElement):
         This is useful for positionning other elements relative to the beam path, for
         example placing an annotation at the focal point of a lens in the beam if the
         beam has an angle.
-        
+
         Parameters
         ----------
         element : OpticalElement
@@ -238,7 +279,7 @@ class RayTracedBeam(OpticalElement):
         -------
         np.ndarray
             The (x, y) coordinates of the beam intersection with the element.
-        
+
         Raises
         ------
         ValueError
@@ -270,13 +311,14 @@ class RayTracedBeam(OpticalElement):
 
         # Propagate until we compute hits on the target element
         for i in range(len(self.elements) - 1):
-            next_el = self.elements[i + 1]
+            next_el: OpticalElement = self.elements[i + 1]
 
             # Primary intersection test
-            t_hit = next_el.intersect(t_pos, t_dir)
-            b_hit = next_el.intersect(b_pos, b_dir)
+            t_hit = next_el._intersect(t_pos, t_dir)
+            b_hit = next_el._intersect(b_pos, b_dir)
 
-            # Fallback projection if rays miss the aperture (mirrors the visualization fallback)
+            # Fallback projection if rays miss the aperture (mirrors the visualization 
+            # fallback)
             if t_hit is None or b_hit is None:
                 normal = next_el.get_normal()
                 for ray_p, ray_d, assign_to in ((t_pos, t_dir, "t"), (b_pos, b_dir, "b")):
@@ -307,6 +349,6 @@ class RayTracedBeam(OpticalElement):
             future_pos = (
                 self.elements[i + 2].center if i + 2 < len(self.elements) else None
             )
-            t_dir = next_el.interact(t_hit, t_dir, future_pos)
-            b_dir = next_el.interact(b_hit, b_dir, future_pos)
+            t_dir = next_el._interact(t_hit, t_dir, future_pos)
+            b_dir = next_el._interact(b_hit, b_dir, future_pos)
             t_pos, b_pos = t_hit, b_hit

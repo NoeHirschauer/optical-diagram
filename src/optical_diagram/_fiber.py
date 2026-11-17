@@ -1,8 +1,9 @@
-from typing import Literal
+from typing import Literal, Self
 
 import numpy as np
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
+from numpy.typing import ArrayLike
 
 from ._annotations import Point
 from ._base import RIGHT, UP, Group, OpticalElement, get_normal_vector
@@ -18,8 +19,8 @@ class Fiber(OpticalElement):
 
     def __init__(
         self,
-        start: OpticalElement | np.ndarray,
-        end: OpticalElement | np.ndarray,
+        start: ArrayLike | OpticalElement,
+        end: ArrayLike | OpticalElement,
         angle_start: float = 0.0,
         angle_end: float = 0.0,
         stiffness: float = 0.5,
@@ -28,9 +29,9 @@ class Fiber(OpticalElement):
         """
         Parameters
         ----------
-        start : array-like or OpticalElement
+        start : ArrayLike | OpticalElement
             Starting coordinates or an element with .center used as start position.
-        end : array-like or OpticalElement
+        end : ArrayLike | OpticalElement
             Ending coordinates or an element with .center used as end position.
         angle_start : float, optional
             Tangent angle at the start point in degrees. Default is 0.0.
@@ -55,10 +56,10 @@ class Fiber(OpticalElement):
         # 3. Create endpoints as Point objects
         # We pass the fiber's color to the dots so they match by default
         dot_color = kwargs.get("color")
-        self.start_point = Point(p0_pos, color=dot_color)
-        """Point : The starting point of the fiber."""
-        self.end_point = Point(p3_pos, color=dot_color)
-        """Point : The ending point of the fiber."""
+        self.start_point: Point = Point(p0_pos, color=dot_color)
+        """The starting point of the fiber."""
+        self.end_point: Point = Point(p3_pos, color=dot_color)
+        """The ending point of the fiber."""
 
         self.angle_start = float(angle_start)
         self.angle_end = float(angle_end)
@@ -91,7 +92,7 @@ class Fiber(OpticalElement):
 
         return p0, p1, p2, p3
 
-    def get_local_points(self):
+    def _get_local_points(self):
         """Returns the 4 Bezier control points relative to the fiber center."""
         pts = np.array(self._get_bezier_points())
         return pts - self.center
@@ -140,9 +141,16 @@ class Fiber(OpticalElement):
 
     # --- Drawing ---
 
-    def show_connections(self, start=True, end=True):
+    def show_connections(self, start: bool = True, end: bool = True):
         """
         Toggle visibility of the endpoint markers.
+
+        Parameters
+        ----------
+        start : bool, optional
+            Whether to show the starting point marker. Default is True.
+        end : bool, optional
+            Whether to show the ending point marker. Default is True.
 
         Returns
         -------
@@ -173,7 +181,7 @@ class Fiber(OpticalElement):
     def color(self, value):
         """Set shorthand color for the fiber line (proxies to edgecolor).
 
-        This also updates the ``color`` of the endpoint markers to match the fiber line
+        This also updates the `color` of the endpoint markers to match the fiber line
         color for visual consistency.
         """
         if value is None:
@@ -210,27 +218,28 @@ class FiberSplitter(Group):
     Notes
     -----
 
-    Only the 3 endpoint `Points` are part of this Group; the internal Fibers are not.
-    Transformations on the FiberSplitter are delegated to the Points, which in turn
-    update the internal Fibers automatically.
+    The two `Fiber` objects are the only elements in the `Group`, and they share a common
+    input `Point` at the start of the splitter. Transformations applied to the
+    `FiberSplitter` are propagated to the internal `Fiber` objects, ensuring that the
+    splitter behaves as a single cohesive element in the optical diagram.
 
     """
 
     def __init__(
         self,
-        input_pos,
-        axis=RIGHT,
-        length=1.0,
-        height=1.0,
+        input_pos: ArrayLike | OpticalElement,
+        axis: ArrayLike = RIGHT,
+        length: float = 1.0,
+        height: float = 1.0,
         alignment: Literal["center", "top", "bottom"] = "center",
         **kwargs,
     ):
         """
         Parameters
         ----------
-        input_pos : array-like or OpticalElement
+        input_pos : ArrayLike | OpticalElement
             Input coordinates or an element with .center used as input position.
-        axis : array-like, optional
+        axis : ArrayLike, optional
             Axial direction from outputs toward the input. Defaults to RIGHT
         length : float, optional
             Axial distance from outputs to input. Default is 1.0.
@@ -261,7 +270,6 @@ class FiberSplitter(Group):
 
         **kwargs : dict, optional
             styling forwarded to the internal Fiber objects
-
         """
         # styling defaults
         kwargs.setdefault("color", "C0")
@@ -306,7 +314,6 @@ class FiberSplitter(Group):
         """The output point A of the splitter."""
         self.out_b_point: Point = fb.end_point  # output B Point
         """The output point B of the splitter."""
-
         self.fiber_a: Fiber = fa
         """The internal Fiber connecting the input to output A."""
         self.fiber_b: Fiber = fb
@@ -374,13 +381,12 @@ class FiberSplitter(Group):
 
     # Properties to update internal point positions when changed
     @property
-    def length(self):
-        """float : axial distance from input to outputs."""
+    def length(self) -> float:
+        """Axial distance from input to outputs."""
         return self._length
 
     @length.setter
-    def length(self, value):
-
+    def length(self, value: float):
         if value < 0:
             raise ValueError("length must be non-negative")
 
@@ -394,12 +400,12 @@ class FiberSplitter(Group):
         self._update_geometry()
 
     @property
-    def height(self):
-        """float : transverse separation between the two outputs."""
+    def height(self) -> float:
+        """Transverse separation between the two outputs."""
         return self._height
 
     @height.setter
-    def height(self, value):
+    def height(self, value: float):
 
         if value < 0:
             raise ValueError("height must be non-negative")
@@ -414,8 +420,8 @@ class FiberSplitter(Group):
         self._update_geometry()
 
     @property
-    def alignment(self):
-        """{'center', 'top', 'bottom'} : Alignment of input relative to outputs.
+    def alignment(self) -> Literal["center", "top", "bottom"]:
+        """Alignment of input relative to outputs.
 
         Notes
         -----
@@ -427,7 +433,6 @@ class FiberSplitter(Group):
 
     @alignment.setter
     def alignment(self, value: Literal["center", "top", "bottom"]):
-
         # check validity
         if value not in {"center", "top", "bottom"}:
             raise ValueError("alignment must be 'center', 'top' or 'bottom'")
@@ -442,8 +447,8 @@ class FiberSplitter(Group):
         self._update_geometry()
 
     # convenience wrappers for chaining these changes
-    def set_length(self, value):
-        """Set the axial length from input to outputs.
+    def set_length(self, value: float) -> Self:
+        """Set the axial length from input to outputs. Chainable.
 
         This is equivalent to setting the `length` property, but allows chaining.
 
@@ -460,8 +465,8 @@ class FiberSplitter(Group):
         self.length = value
         return self
 
-    def set_height(self, value):
-        """Set the transverse height between the two outputs.
+    def set_height(self, value: float) -> Self:
+        """Set the transverse height between the two outputs. Chainable.
 
         This is equivalent to setting the `height` property, but allows chaining.
 
@@ -478,8 +483,8 @@ class FiberSplitter(Group):
         self.height = value
         return self
 
-    def set_alignment(self, value: Literal["center", "top", "bottom"]):
-        """Set the alignment of the input relative to the outputs.
+    def set_alignment(self, value: Literal["center", "top", "bottom"]) -> Self:
+        """Set the alignment of the input relative to the outputs. Chainable.
 
         This is equivalent to setting the `alignment` property, but allows chaining.
 
@@ -497,9 +502,20 @@ class FiberSplitter(Group):
         return self
 
     # Show connections: delegate to internal fibers so drawing is handled by Group.draw()
-    def show_connections(self, input=True, out_a=True, out_b=True):
+    def show_connections(
+        self, input: bool = True, out_a: bool = True, out_b: bool = True
+    ) -> Self:
         """
-        Toggle visibility of the endpoint markers.
+        Toggle visibility of the endpoint markers. Chainable.
+
+        Parameters
+        ----------
+        input : bool, optional
+            Whether to show the input point marker. Default is True.
+        out_a : bool, optional
+            Whether to show the output A point marker. Default is True.
+        out_b : bool, optional
+            Whether to show the output B point marker. Default is True.
 
         Returns
         -------
@@ -515,7 +531,7 @@ class FiberSplitter(Group):
 
         return self
 
-    def show_labels(self):
+    def show_labels(self) -> Self:
         """Display labels to the corner points for debugging.
 
         These labels are only rendered when the element is drawn, and are not part of the
@@ -532,7 +548,6 @@ class FiberSplitter(Group):
         return self
 
     # transformations that involve any kind of rotation should update the internal axis
-
     def rotate(self, angle_degrees, about_point=None):
         # Rotate internal axis
         rad = np.deg2rad(angle_degrees)
@@ -545,7 +560,6 @@ class FiberSplitter(Group):
         return super().rotate(angle_degrees, about_point)
 
     def flip(self, axis=UP, about_point=None):
-
         # Flip internal axis (symmetry on the axis / reflection)
         axis_unit = np.asarray(axis) / np.linalg.norm(axis)
 
@@ -561,17 +575,17 @@ class FiberSplitter(Group):
         return super().flip(axis, about_point)
 
     # override the move_to method such that the anchor is the input and not center point
-    def move_to(self, position):
+    def move_to(self, position: ArrayLike | OpticalElement):
         """Move the splitter so that its input point is placed at ``position``.
 
-        This overrides the base :meth:`Group.move_to` behavior, which typically uses
+        This overrides the base `Group.move_to` behavior, which typically uses
         the element's center as the anchor. Here, the splitter is translated such
-        that :attr:`input_point` is moved to ``position``, and all other points are
+        that `input_point` is moved to ``position``, and all other points are
         shifted accordingly.
 
         Parameters
         ----------
-        position :
+        position : ArrayLike | OpticalElement
             Target location for the input point. May be an object with a
             ``center`` attribute or an array-like ``(x, y)`` coordinate.
         """
@@ -619,8 +633,7 @@ class FiberSplitter(Group):
 
 
 class FiberCoupler(Group):
-    """
-    Coupler between 2 channels (2 inputs, 2 outputs)
+    """Coupler between 2 channels (2 inputs, 2 outputs)
 
     Implemented as a Group of 4 Fibers to be able to independently control the center
     separation (distance between the midpoints of the two channels) without affecting the
@@ -628,14 +641,20 @@ class FiberCoupler(Group):
     """
 
     def __init__(
-        self, position, axis=RIGHT, height=1.0, length=1.0, min_separation=0.1, **kwargs
+        self,
+        position: ArrayLike | OpticalElement,
+        axis: ArrayLike = RIGHT,
+        height: float = 1.0,
+        length: float = 1.0,
+        min_separation: float = 0.1,
+        **kwargs,
     ):
         """
         Parameters
         ----------
-        position : array-like or OpticalElement
+        position : ArrayLike | OpticalElement
             Center position of the coupler.
-        axis : array-like, optional
+        axis : ArrayLike, optional
             Axial direction from inputs to outputs. Default is RIGHT.
         height : float, optional
             Transverse separation between the two channels. Default is 1.0.
@@ -688,13 +707,19 @@ class FiberCoupler(Group):
         fb2 = Fiber(mid_b, out_b, **kwargs)
 
         # store point references (corners & mids)
-        self.in_a_point = fa1.start_point
-        self.mid_a_point = fa1.end_point
-        self.out_a_point = fa2.end_point
+        self.in_a_point: Point = fa1.start_point
+        """Input point of fiber channel A."""
+        self.mid_a_point: Point = fa1.end_point
+        """Midpoint of fiber channel A."""
+        self.out_a_point: Point = fa2.end_point
+        """Output point of fiber channel A."""
 
-        self.in_b_point = fb1.start_point
-        self.mid_b_point = fb1.end_point
-        self.out_b_point = fb2.end_point
+        self.in_b_point: Point = fb1.start_point
+        """Input point of fiber channel B."""
+        self.mid_b_point: Point = fb1.end_point
+        """Midpoint of fiber channel B."""
+        self.out_b_point: Point = fb2.end_point
+        """Output point of fiber channel B."""
 
         # fibers list for the Group
         elements = [fa1, fa2, fb1, fb2]
@@ -734,9 +759,7 @@ class FiberCoupler(Group):
         self.fiber_b2.color = value
 
     def _update_geometry(self):
-        """
-        Internal helper to update corner and mid point positions based on new geometry.
-        """
+        """Internal helper to update corner and mid point positions based on new geometry."""
 
         A = self._axis
         AT = self._axis_transverse
@@ -781,13 +804,12 @@ class FiberCoupler(Group):
 
     # --- Properties that update point positions --------------------------------
     @property
-    def length(self):
-        """float : axial length of each channel."""
+    def length(self) -> float:
+        """Axial length of each channel (from input to output)."""
         return self._length
 
     @length.setter
     def length(self, value):
-
         if value < 0:
             raise ValueError("length must be non-negative")
 
@@ -801,12 +823,12 @@ class FiberCoupler(Group):
         self._update_geometry()
 
     @property
-    def height(self):
-        """float : height (transverse separation) of each channel."""
+    def height(self) -> float:
+        """Height (transverse separation) between the two channels."""
         return self._height
 
     @height.setter
-    def height(self, value):
+    def height(self, value: float):
         if value < 0:
             raise ValueError("height must be non-negative")
 
@@ -820,12 +842,12 @@ class FiberCoupler(Group):
         self._update_geometry()
 
     @property
-    def min_separation(self):
-        """float : minimum separation between the two channels at the center."""
+    def min_separation(self) -> float:
+        """Minimum separation between the two channels at the center."""
         return self._min_separation
 
     @min_separation.setter
-    def min_separation(self, value):
+    def min_separation(self, value: float):
         if value < 0:
             raise ValueError("min_separation must be non-negative")
 
@@ -839,24 +861,43 @@ class FiberCoupler(Group):
         self._update_geometry()
 
     # chaining helpers
-    def set_length(self, value):
-        """Set the axial length of each channel."""
+    def set_length(self, value: float) -> Self:
+        """Set the axial length of each channel. Chainable."""
         self.length = value
         return self
 
-    def set_height(self, value):
-        """Set the height (transverse separation) of each channel."""
+    def set_height(self, value: float) -> Self:
+        """Set the height (transverse separation) of each channel. Chainable."""
         self.height = value
         return self
 
-    def set_min_separation(self, value):
-        """Set the minimum separation between the two channels at the center."""
+    def set_min_separation(self, value: float) -> Self:
+        """Set the minimum separation between the two channels at the center. Chainable."""
         self.min_separation = value
         return self
 
     # --- show connections (delegates to internal fibers) -----------------------
-    def show_connections(self, in_a=True, in_b=True, out_a=True, out_b=True):
-        """Show or hide connection markers at the input/output points of each channel."""
+    def show_connections(
+        self, in_a: bool = True, in_b: bool = True, out_a: bool = True, out_b: bool = True
+    ) -> Self:
+        """Show or hide connection markers at the input/output points of each channel.
+
+        Parameters
+        ----------
+        in_a : bool, optional
+            Whether to show the input marker for channel A. Default is True.
+        in_b : bool, optional
+            Whether to show the input marker for channel B. Default is True.
+        out_a : bool, optional
+            Whether to show the output marker for channel A. Default is True.
+        out_b : bool, optional
+            Whether to show the output marker for channel B. Default is True.
+
+        Returns
+        -------
+        self
+            The instance itself (for chaining).
+        """
         self._show_in_a = in_a
         self._show_in_b = in_b
         self._show_out_a = out_a

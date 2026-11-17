@@ -41,14 +41,14 @@ def test_geometric_properties_and_copy():
 
 def test_rotation_matrix_and_local_critical_boundary_edge():
     e = DummyElement((0.0, 0.0), size=2.0, angle=90.0)
-    R = e.get_rotation_matrix()
+    R = e._get_rotation_matrix()
     expected_R = np.array([[0.0, -1.0], [1.0, 0.0]])
     assert np.allclose(R, expected_R)
 
-    local = e.get_local_points()
+    local = e._get_local_points()
     assert np.allclose(local, np.array([[0.0, 1.0], [0.0, -1.0]]))
 
-    crit = e.get_critical_points()
+    crit = e._get_critical_points()
     # rotated local points should be [[-1,0],[1,0]] (for 90 deg) plus center (0,0)
     assert crit.shape == (2, 2)
     bx = e.get_boundary_box()
@@ -62,11 +62,11 @@ def test_rotation_matrix_and_local_critical_boundary_edge():
 
 def test_normals_and_direction_vectors():
     e0 = DummyElement((0, 0), size=2.0, angle=0.0)
-    assert np.allclose(e0.get_normal(), np.array([1.0, 0.0]))
+    assert np.allclose(e0.get_normal_vector(), np.array([1.0, 0.0]))
     assert np.allclose(e0.get_direction_vector(), np.array([0.0, 1.0]))
 
     e90 = DummyElement((0, 0), size=2.0, angle=90.0)
-    assert np.allclose(e90.get_normal(), np.array([0.0, 1.0]))
+    assert np.allclose(e90.get_normal_vector(), np.array([0.0, 1.0]))
     assert np.allclose(e90.get_direction_vector(), np.array([-1.0, 0.0]))
 
 
@@ -74,18 +74,18 @@ def test_intersect_and_interact_behavior():
     e = DummyElement((0.0, 0.0), size=2.0, angle=0.0)
     ray_origin = np.array([-1.0, 0.0])
     ray_dir = RIGHT
-    inter = e.intersect(ray_origin, ray_dir)
+    inter = e._intersect(ray_origin, ray_dir)
     assert inter is not None
     assert np.allclose(inter, np.array([0.0, 0.0]))
 
     # parallel ray -> None
-    assert e.intersect(np.array((0.0, 0.0)), UP) is None
+    assert e._intersect(np.array((0.0, 0.0)), UP) is None
 
     # ray pointing away -> None
-    assert e.intersect(np.array((1.0, 0.0)), RIGHT) is None
+    assert e._intersect(np.array((1.0, 0.0)), RIGHT) is None
 
     # default interact returns unchanged direction
-    out = e.interact(inter, ray_dir)
+    out = e._interact(inter, ray_dir)
     assert np.allclose(out, ray_dir)
 
 

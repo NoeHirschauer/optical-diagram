@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from copy import deepcopy
 from typing import Self
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 __all__ = [  # noqa: RUF022
     "RIGHT",
@@ -56,7 +58,7 @@ class OpticalElement(ABC):
 
     def __init__(
         self,
-        position: np.ndarray | "OpticalElement" = ORIGIN,  # noqa: TC010
+        position: ArrayLike | "OpticalElement" = ORIGIN,  # noqa: TC010
         size: float = 1,
         angle: float = 0.0,
         **kwargs,
@@ -64,7 +66,7 @@ class OpticalElement(ABC):
         """
         Parameters
         ----------
-        position : array_like | `OpticalElement`
+        position : ArrayLike | `OpticalElement`
             The (x, y) coordinates of the center. Can be a sequence of 2 numbers or an
             instance of `OpticalElement`. If an `OpticalElement` is passed, its center
             will be used. Defaults to ``(0,0)``
@@ -133,20 +135,36 @@ class OpticalElement(ABC):
         """The current x-coordinate of the element's center."""
         return self._center[0]
 
+    @x.setter
+    def x(self, value):
+        self._center[0] = float(value)
+
     @property
     def y(self) -> float:
         """The current y-coordinate of the element's center."""
         return self._center[1]
+
+    @y.setter
+    def y(self, value):
+        self._center[1] = float(value)
 
     @property
     def size(self) -> float:
         """The current characteristic size of the element."""
         return self._size
 
+    @size.setter
+    def size(self, value):
+        self._size = float(value)
+
     @property
     def angle(self) -> float:
         """The current rotation angle in degrees."""
         return self._angle
+
+    @angle.setter
+    def angle(self, value):
+        self._angle = float(value)
 
     # -------------------------------------------------------------------------
     # Creation & Duplication
@@ -160,7 +178,7 @@ class OpticalElement(ABC):
         Returns
         -------
         Self
-            A new instance of the same class with identical properties, independent of 
+            A new instance of the same class with identical properties, independent of
             the original.
         """
         return deepcopy(self)
@@ -168,7 +186,7 @@ class OpticalElement(ABC):
     # -------------------------------------------------------------------------
     # Geometric Utilities (Anchors)
     # -------------------------------------------------------------------------
-    def get_rotation_matrix(self) -> np.ndarray:
+    def _get_rotation_matrix(self) -> np.ndarray:
         """Get the 2D rotation matrix based on the element's angle.
 
         Returns
@@ -179,7 +197,7 @@ class OpticalElement(ABC):
         theta = np.deg2rad(self._angle)
         return np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
 
-    def get_local_points(self) -> np.ndarray:
+    def _get_local_points(self) -> np.ndarray:
         """Return key points (like corners or ends) in unrotated, local coordinates
 
         Coordinates are relative to ``(0,0)``. Must be implemented by subclasses to
@@ -194,7 +212,7 @@ class OpticalElement(ABC):
         half = self._size / 2.0
         return np.array([[0, half], [0, -half]])
 
-    def get_critical_points(self) -> np.ndarray:
+    def _get_critical_points(self) -> np.ndarray:
         """Return the key geometric points transformed to world space.
 
         Returns
@@ -202,21 +220,21 @@ class OpticalElement(ABC):
         np.ndarray
             An array of shape (N, 2) containing the world coordinates of key points.
         """
-        local_pts = self.get_local_points()
-        rot = self.get_rotation_matrix()
+        local_pts = self._get_local_points()
+        rot = self._get_rotation_matrix()
         return (rot @ local_pts.T).T + self.center
 
     def get_boundary_box(self) -> tuple[float, float, float, float]:
         """Returns (min_x, min_y, max_x, max_y) of the element."""
-        pts = self.get_critical_points()
+        pts = self._get_critical_points()
         return np.min(pts[:, 0]), np.min(pts[:, 1]), np.max(pts[:, 0]), np.max(pts[:, 1])
 
-    def get_edge(self, direction: np.ndarray) -> np.ndarray:
+    def get_edge(self, direction: ArrayLike) -> np.ndarray:
         """Get the (x, y) point on the bounding box in a specific direction.
 
         Parameters
         ----------
-        direction : array_like
+        direction : ArrayLike
             Vector indicating direction (e.g. `RIGHT`, `UP`).
         """
         min_x, min_y, max_x, max_y = self.get_boundary_box()
@@ -233,7 +251,7 @@ class OpticalElement(ABC):
     # -------------------------------------------------------------------------
     # Physical Utilities (for ray tracing)
     # -------------------------------------------------------------------------
-    def get_normal(self) -> np.ndarray:
+    def get_normal_vector(self) -> np.ndarray:
         """Returns the normal vector of the element plane."""
         theta = np.deg2rad(self._angle)
         # Assuming element lies along local Y, normal is along local X
@@ -245,17 +263,17 @@ class OpticalElement(ABC):
         theta = np.deg2rad(self._angle)
         return np.array([-np.sin(theta), np.cos(theta)])
 
-    def intersect(
-        self, ray_origin: np.ndarray, ray_direction: np.ndarray
+    def _intersect(
+        self, ray_origin: ArrayLike, ray_direction: ArrayLike
     ) -> np.ndarray | None:
         r"""
         Calculate intersection point of a ray with this element's plane.
 
         Parameters
         ----------
-        ray_origin : array
+        ray_origin : ArrayLike
             The (x, y) starting point of the ray.
-        ray_direction : array
+        ray_direction : ArrayLike
             The (x, y) direction vector of the ray (should be normalized).
 
         Returns
@@ -280,7 +298,7 @@ class OpticalElement(ABC):
         # Ray equation: P = Origin + t * Direction
         # Solve for t: t = (Center - Origin) . Normal / (Direction . Normal)
 
-        normal = self.get_normal()
+        normal = self.get_normal_vector()
         denom = np.dot(ray_direction, normal)
 
         if np.isclose(denom, 0):
@@ -301,11 +319,11 @@ class OpticalElement(ABC):
 
         return intersection
 
-    def interact(
+    def _interact(
         self,
-        ray_origin: np.ndarray,
-        ray_direction: np.ndarray,
-        next_element_center: np.ndarray | None = None,
+        ray_origin: ArrayLike,
+        ray_direction: ArrayLike,
+        next_element_center: ArrayLike | None = None,
     ) -> np.ndarray:
         """Physics logic: How does this element alter an incoming ray?
 
@@ -314,16 +332,16 @@ class OpticalElement(ABC):
 
         Parameters
         ----------
-        ray_origin : array
+        ray_origin : ArrayLike
             Incoming ray origin point.
-        ray_direction : array
+        ray_direction : ArrayLike
             Incoming direction vector.
-        next_element_center : array, optional
+        next_element_center : ArrayLike, optional
             Center of the next optical element in the ray path (if applicable).
 
         Returns
         -------
-        new_direction : array
+        new_direction : np.ndarray
             The normalized direction vector after interaction.
 
         Notes
@@ -338,12 +356,12 @@ class OpticalElement(ABC):
     # -------------------------------------------------------------------------
     # Transformations (Chainable)
     # -------------------------------------------------------------------------
-    def move_to(self, target: np.ndarray | "OpticalElement") -> Self:  # noqa: TC010
+    def move_to(self, target: ArrayLike | "OpticalElement") -> Self:  # noqa: TC010
         """Move the center of the element to the specified point.
 
         Parameters
         ----------
-        target : array_like | `OpticalElement`
+        target : ArrayLike | `OpticalElement`
             The point (x, y) to move to, or an `OpticalElement` whose center coordinates
             will be used as target
 
@@ -359,12 +377,12 @@ class OpticalElement(ABC):
         self.center = target
         return self
 
-    def shift(self, vector: np.ndarray) -> Self:
+    def shift(self, vector: ArrayLike) -> Self:
         """Translate the element by a vector.
 
         Parameters
         ----------
-        vector : array_like
+        vector : ArrayLike
             (dx, dy) translation vector.
 
         Returns
@@ -377,7 +395,7 @@ class OpticalElement(ABC):
     def rotate(
         self,
         angle_degrees: float,
-        about_point: np.ndarray | "OpticalElement" | None = None,  # noqa: TC010
+        about_point: ArrayLike | "OpticalElement" | None = None,  # noqa: TC010
     ) -> Self:
         """Rotate the element.
 
@@ -385,7 +403,7 @@ class OpticalElement(ABC):
         ----------
         angle_degrees : float
             Angle to add to current rotation.
-        about_point : array_like | `OpticalElement` | None, optional
+        about_point : ArrayLike | `OpticalElement` | None, optional
             Point to rotate about. If an `OpticalElement` is provided, its center is used
             as the pivot point. If None, rotates about self.center. Defaults to None.
 
@@ -415,17 +433,17 @@ class OpticalElement(ABC):
 
     def flip(
         self,
-        axis: np.ndarray = UP,
-        about_point: np.ndarray | "OpticalElement" | None = None,  # noqa: TC010
+        axis: ArrayLike = UP,
+        about_point: ArrayLike | "OpticalElement" | None = None,  # noqa: TC010
     ) -> Self:
         """Mirror the element across an axis passing through a point.
 
         Parameters
         ----------
-        axis : array_like
+        axis : ArrayLike
             Vector defining the line of reflection (e.g., `UP` for vertical flip,
             `RIGHT` for horizontal flip). Defaults to `UP`.
-        about_point : array_like | `OpticalElement` | None, optional
+        about_point : ArrayLike | `OpticalElement` | None, optional
             Point the reflection axis passes through. If an `OpticalElement`
             is provided, its center is used. If None, flips about self.center.
             Defaults to None.
@@ -465,7 +483,7 @@ class OpticalElement(ABC):
     def scale(
         self,
         scale_factor: float,
-        about_point: np.ndarray | "OpticalElement" | None = None,  # noqa: TC010
+        about_point: ArrayLike | "OpticalElement" | None = None,  # noqa: TC010
     ) -> Self:
         """Scale the element's size and potentially its position.
 
@@ -473,7 +491,7 @@ class OpticalElement(ABC):
         ----------
         scale_factor : float
             Factor to multiply the current size by.
-        about_point : array_like | `OpticalElement` | None, optional
+        about_point : ArrayLike | `OpticalElement` | None, optional
             The reference point for the scaling operation.
             If an `OpticalElement` is provided, its center is used.
             If None, the element scales in place (about its own center).
@@ -501,7 +519,7 @@ class OpticalElement(ABC):
         return self
 
     def next_to(
-        self, other: "OpticalElement", direction: np.ndarray = RIGHT, buff: float = 0.0
+        self, other: "OpticalElement", direction: ArrayLike = RIGHT, buff: float = 0.0
     ) -> Self:
         """Move this element next to another element.
 
@@ -509,7 +527,7 @@ class OpticalElement(ABC):
         ----------
         other : `OpticalElement`
             The reference element.
-        direction : array_like
+        direction : ArrayLike
             Direction to place this element (e.g. RIGHT).
         buff : float
             Buffer distance. Defaults to 0
@@ -675,13 +693,17 @@ class OpticalSystem(OpticalElement):
 
 
 class Group(OpticalElement):
-    """A collection of OpticalElements treated as a single unit."""
+    """A collection of OpticalElements treated as a single unit.
 
-    def __init__(self, elements: list["OpticalElement"], **kwargs):
+    Transformations applied to the group (move, rotate, scale, etc.) are delegated to all
+    contained elements.
+    """
+
+    def __init__(self, elements: Iterable[OpticalElement], **kwargs):
         """
         Parameters
         ----------
-        elements : list of OpticalElement
+        elements : Iterable[OpticalElement]
             The elements to include in the group.
         **kwargs
             Additional keyword arguments to pass to the base class.
@@ -702,7 +724,7 @@ class Group(OpticalElement):
             max_dist = max(max_dist, np.max(dists))
 
         super().__init__(position=group_center, size=2 * max_dist, angle=0.0, **kwargs)
-        self.elements: list[OpticalElement] = elements
+        self.elements: list[OpticalElement] = list(elements)
         """The list of OpticalElement instances contained in the group, in the order they were added."""
 
     def add(self, *elements: "OpticalElement"):
@@ -717,8 +739,7 @@ class Group(OpticalElement):
         Parameters
         ----------
         *elements
-            One or more :class:`OpticalElement` instances to be added to the
-            group.
+            One or more :class:`OpticalElement` instances to be added to the group.
         """
         self.elements.extend(elements)
 
@@ -877,8 +898,7 @@ class Group(OpticalElement):
 
 # helper functions
 def get_axis_direction(e1: OpticalElement, e2: OpticalElement) -> np.ndarray:
-    """
-    Returns the unit vector from element 1 to element 2
+    """Returns the unit vector from element 1 to element 2
 
     Parameters
     ----------
@@ -898,8 +918,7 @@ def get_axis_direction(e1: OpticalElement, e2: OpticalElement) -> np.ndarray:
 
 
 def get_normal_direction(e1: OpticalElement, e2: OpticalElement) -> np.ndarray:
-    """
-    Returns the unit vector perpendicular to the direction from ``e1`` to ``e2``.
+    """Returns the unit vector perpendicular to the direction from ``e1`` to ``e2``.
 
     Parameters
     ----------
@@ -925,14 +944,13 @@ def get_normal_direction(e1: OpticalElement, e2: OpticalElement) -> np.ndarray:
     return n / np.linalg.norm(n)
 
 
-def get_normal_vector(vec: np.ndarray | tuple) -> np.ndarray:
-    """
-    Returns a unit vector perpendicular to ``vec``
+def get_normal_vector(vec: ArrayLike) -> np.ndarray:
+    """Returns a unit vector perpendicular to ``vec``
 
     Parameters
     ----------
-    vec : np.ndarray | tuple
-        Input vector
+    vec : ArrayLike
+        Input vector, 2 elements (x, y).
 
     Returns
     -------

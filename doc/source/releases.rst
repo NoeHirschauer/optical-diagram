@@ -9,15 +9,20 @@ Releases
    :local:
 
 
+Version 0.5.0
+-------------
+- Cleaned up the public and private API of the package. All physics-related methods are now private, and the public API is focused on creating and manipulating optical elements and beams.
+
+
+Previous Releases
+=================
+
 Version 0.4.3
 -------------
 
 - Moved to a src layout for the project to make it easier to install and use as a package.
 - Updated the documentation to reflect the new src layout and added instructions for installing the package.
 - Added project scripts for the documentation and for running tests, compatible with `uv run ...`
-
-Previous Releases
-=================
 
 Version 0.4.2
 -------------

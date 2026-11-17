@@ -30,15 +30,15 @@ def test_plane_mirror_on_axis_reflection_formula_and_normalization():
     ray_origin = np.array([-1.0, 0.0])
     ray_dir = _norm(np.array([1.0, 0.0]))
 
-    inter = m.intersect(ray_origin, ray_dir)
+    inter = m._intersect(ray_origin, ray_dir)
     assert inter is not None
 
     # the intersection should be at the center of the mirror
     assert np.allclose(inter, m.center)
 
-    out = m.interact(inter, ray_dir)
+    out = m._interact(inter, ray_dir)
     # expected reflection: horizontal incidence -> horizontal reflection (-x direction)
-    n = _norm(m.get_normal())
+    n = _norm(m.get_normal_vector())
     expected = ray_dir - 2 * np.dot(ray_dir, n) * n
     assert pytest.approx(np.linalg.norm(out), rel=1e-6) == 1.0
     assert np.allclose(_norm(out), _norm(expected))
@@ -51,15 +51,15 @@ def test_plane_mirror_at_angle_reflection_formula_and_normalization():
     ray_origin = np.array([-1.0, 0.0])
     ray_dir = _norm(np.array([1.0, 0.0]))
 
-    inter = m.intersect(ray_origin, ray_dir)
+    inter = m._intersect(ray_origin, ray_dir)
     assert inter is not None
 
     # the intersection should be at the center of the mirror
     assert np.allclose(inter, m.center)
 
-    out = m.interact(inter, ray_dir)
+    out = m._interact(inter, ray_dir)
     # expected reflection: 0 deg incidence on 45 deg mirror -> 90 deg reflection (down)
-    n = _norm(m.get_normal())
+    n = _norm(m.get_normal_vector())
     expected = _norm(ray_dir - 2 * np.dot(ray_dir, n) * n)
     assert pytest.approx(np.array([0.0, -1.0])) == expected
     assert pytest.approx(np.linalg.norm(out), rel=1e-6) == 1.0
@@ -89,21 +89,21 @@ def test_curved_mirrors_match_lenses_up_to_sign(origin, direction):
     # the propagation direction (x axis here))
 
     # converging lens vs concave mirror
-    il = conv_lens.intersect(origin, direction)
-    im = conc_mirror.intersect(origin, direction)
+    il = conv_lens._intersect(origin, direction)
+    im = conc_mirror._intersect(origin, direction)
     assert il is not None and im is not None
 
-    out_l = _norm(conv_lens.interact(il, direction))
-    out_m = _norm(conc_mirror.interact(im, direction))
+    out_l = _norm(conv_lens._interact(il, direction))
+    out_m = _norm(conc_mirror._interact(im, direction))
     assert np.allclose(out_m, out_l * np.array([-1, 1]), atol=1e-6)
 
     # diverging lens vs convex mirror
-    il2 = div_lens.intersect(origin, direction)
-    im2 = conv_mirror.intersect(origin, direction)
+    il2 = div_lens._intersect(origin, direction)
+    im2 = conv_mirror._intersect(origin, direction)
     assert il2 is not None and im2 is not None
 
-    out_l2 = _norm(div_lens.interact(il2, direction))
-    out_m2 = _norm(conv_mirror.interact(im2, direction))
+    out_l2 = _norm(div_lens._interact(il2, direction))
+    out_m2 = _norm(conv_mirror._interact(im2, direction))
     assert np.allclose(out_m2, out_l2 * np.array([-1, 1]), atol=1e-6)
 
 

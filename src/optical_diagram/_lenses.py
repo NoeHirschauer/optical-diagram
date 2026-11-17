@@ -9,15 +9,15 @@ __all__ = ["ConvergingLens", "DivergingLens"]
 class _Lens(OpticalSystem):
     """Base class for lenses."""
 
-    def get_local_points(self):
+    def _get_local_points(self):
         h = self._size / 2.0
         return np.array([[0, -h], [0, h]])
 
     def _get_mpl_artist(self):
-        pts = self.get_critical_points()
+        pts = self._get_critical_points()
         return FancyArrowPatch(pts[0], pts[1], **self._style)
 
-    def interact(self, ray_origin, ray_direction, next_element_center=None):
+    def _interact(self, ray_origin, ray_direction, next_element_center=None):
         r"""Calculate the new ray direction after passing through the lens.
 
         Uses the thin lens approximation to adjust the ray direction based on
@@ -43,7 +43,7 @@ class _Lens(OpticalSystem):
             raise ValueError(f"Lens at {self.center} has no focal_length set.")
 
         # Vectors
-        normal = self.get_normal()
+        normal = self.get_normal_vector()
         # Ensure normal points in the direction of propagation
         if np.dot(normal, ray_direction) < 0:
             normal = -normal

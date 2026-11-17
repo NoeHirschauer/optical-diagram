@@ -77,7 +77,7 @@ b2 = RayTracedBeam((p2, l1, cube, l4, img_plane2), divergence=10, color=p2.color
 
 table.add(b0, b1, b2)
 
-fiber_start = b2.get_intersection_with(img_plane2)
+fiber_start = b2._get_intersection_with(img_plane2)
 fiber_end = (3, -2)
 cable = Fiber(fiber_start, fiber_end, angle_start=-90, color=b2.color).show_connections(
     end=False
