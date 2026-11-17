@@ -208,7 +208,7 @@ class RayTracedBeam(OpticalElement):
 
             # Fallback projection if rays miss the physical aperture (for visualization)
             if t_hit is None or b_hit is None:
-                normal = next_el.get_normal()
+                normal = next_el.get_normal_vector()
                 for ray_p, ray_d in [(t_pos, t_dir), (b_pos, b_dir)]:
                     denom = np.dot(ray_d, normal)
                     if abs(denom) > 1e-9:
@@ -317,10 +317,10 @@ class RayTracedBeam(OpticalElement):
             t_hit = next_el._intersect(t_pos, t_dir)
             b_hit = next_el._intersect(b_pos, b_dir)
 
-            # Fallback projection if rays miss the aperture (mirrors the visualization 
+            # Fallback projection if rays miss the aperture (mirrors the visualization
             # fallback)
             if t_hit is None or b_hit is None:
-                normal = next_el.get_normal()
+                normal = next_el.get_normal_vector()
                 for ray_p, ray_d, assign_to in ((t_pos, t_dir, "t"), (b_pos, b_dir, "b")):
                     denom = np.dot(ray_d, normal)
                     if abs(denom) > 1e-9:
