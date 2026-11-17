@@ -83,6 +83,7 @@ Tools to annotate the optical diagram with labels, arrows, and other visual elem
 
     OpticalAxis
     Plane
+    Circle
     Point
     Label
     Rectangle
@@ -137,6 +138,7 @@ from ._lenses import ConvergingLens, DivergingLens
 from ._beams import SimpleBeam, DivergingBeam, RayTracedBeam
 from ._annotations import (
     Plane,
+    Circle,
     Point,
     OpticalAxis,
     Label,
@@ -170,6 +172,7 @@ __all__ = [  # noqa: RUF022
     "DivergingLens",
     # Annotations
     "Plane",
+    "Circle",
     "Point",
     "OpticalAxis",
     "Label",

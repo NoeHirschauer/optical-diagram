@@ -1,5 +1,6 @@
 import numpy as np
-from matplotlib.patches import Circle, FancyArrowPatch
+from matplotlib.patches import Circle as MplCircle
+from matplotlib.patches import FancyArrowPatch
 from matplotlib.patches import Polygon as MplPolygon
 
 from ._base import ORIGIN, OpticalElement
@@ -7,6 +8,7 @@ from ._base import ORIGIN, OpticalElement
 __all__ = [  # noqa: RUF022
     "Plane",
     "Point",
+    "Circle",
     "OpticalAxis",
     "Label",
     "Rectangle",
@@ -15,9 +17,11 @@ __all__ = [  # noqa: RUF022
 
 
 class Plane(OpticalElement):
-    """
-    A plane represented by a dashed line.
+    """A plane represented by a dashed line.
+
     Used for visualization; rays pass through without interaction.
+    The default Plane with ``angle=0.0`` is vertical to match the Lens/Mirror convention.
+    Behind the scenes, this is a `plt.FancyArrowPatch` with no arrowheads.
     """
 
     def __init__(self, position=ORIGIN, size=1.0, angle=0.0, **kwargs):
@@ -26,22 +30,26 @@ class Plane(OpticalElement):
         kwargs.setdefault("color", "gray")
         super().__init__(position, size, angle, **kwargs)
 
-    def get_local_points(self):
+    def _get_local_points(self):
         # Defines a vertical line segment in local space
         h = self._size / 2.0
         return np.array([[0, -h], [0, h]])
 
     def _get_mpl_artist(self):
-        pts = self.get_critical_points()
+        pts = self._get_critical_points()
         style = self._style.copy()
         style.setdefault("arrowstyle", "-")
         return FancyArrowPatch(pts[0], pts[1], **style)
 
 
 class Point(OpticalElement):
-    """
-    A reference point represented by a small dot.
+    """A reference point represented by a small filled dot.
+
     Rays pass through its plane without interaction.
+    Behind the scenes, this is a `matplotlib.patches.Circle` filled with the specified
+    color. Due to implementation details, it is not possible to set the facecolor to
+    "none" and have a visible edgecolor.
+    For an outline circle, see `~optical_diagram.Circle`
     """
 
     def __init__(self, position=ORIGIN, size=0.1, **kwargs):
@@ -55,15 +63,15 @@ class Point(OpticalElement):
     @property
     def color(self):
         """Shorthand color proxy.
-        
+
         Defaults to `color`
         """
         return self._style.get("color")
-    
+
     @color.setter
     def color(self, value):
         """Set shorthand color for the point.
-        
+
         Removes any existing facecolor/edgecolor to avoid conflicts, and sets the
         overall color for the dot. If value is None, it clears all color settings.
         """
@@ -78,7 +86,7 @@ class Point(OpticalElement):
             self._style.pop("facecolor", None)
             self._style["color"] = value
 
-    def get_local_points(self):
+    def _get_local_points(self):
         # A point has no extent, but provides the center for the artist
         return np.array([[0, 0]])
 
@@ -88,7 +96,35 @@ class Point(OpticalElement):
         if style.get("facecolor") == "none":
             style["facecolor"] = style.get("edgecolor", "k")
 
-        return Circle(self.center, radius=self._size / 2, **style)
+        return MplCircle(self.center, radius=self._size / 2, **style)
+
+
+class Circle(OpticalElement):
+    """A circle with independent edgecolor and facecolor.
+
+    This is a minimal wrapper around `plt.Circle`. Unlike `Point`, this allows for an
+    unfilled circle with a visible edgecolor, and can be used to outline other elements.
+
+    The default style is::
+
+        edgecolor='k', facecolor='none', linewidth=1.5, zorder=10
+    """
+
+    def __init__(self, position=ORIGIN, radius=0.5, **kwargs):
+        self.radius = float(radius)
+        super().__init__(position, size=2 * radius, angle=0.0, **kwargs)
+        # Default style for a circle
+        defaults = {"edgecolor": "k", "facecolor": "none", "linewidth": 1.5, "zorder": 10}
+        for k, v in defaults.items():
+            self._style.setdefault(k, v)
+
+    def _get_local_points(self):
+        # A point has no extent, but provides the center for the artist
+        return np.array([[0, 0]])
+
+    def _get_mpl_artist(self):
+
+        return MplCircle(self.center, radius=self._size / 2, **self._style)
 
 
 class OpticalAxis(OpticalElement):
@@ -121,13 +157,13 @@ class OpticalAxis(OpticalElement):
 
         super().__init__(center, dist, angle, **kwargs)
 
-    def get_local_points(self):
+    def _get_local_points(self):
         h = self._size / 2.0
         return np.array([[-h, 0], [h, 0]])
 
     def _get_mpl_artist(self):
         # We re-calculate based on current center/angle in case it was moved
-        pts = self.get_critical_points()
+        pts = self._get_critical_points()
         style = self._style.copy()
         style.setdefault("arrowstyle", "-")
         return FancyArrowPatch(pts[0], pts[1], **style)
@@ -137,6 +173,7 @@ class Label(OpticalElement):
     """
     A text label positioned relative to an anchor point or element.
     """
+
     def __init__(self, anchor, direction=None, text="label", buffer=0.1, **kwargs):
         self.anchor = anchor
         self.direction = (
@@ -190,6 +227,7 @@ class Rectangle(OpticalElement):
     """
     A rectangle represented by a polygon, defined by width and height.
     """
+
     def __init__(self, position=ORIGIN, width=1.0, height=1.0, angle=0.0, **kwargs):
         self.width = float(width)
         self.height = float(height)
@@ -198,12 +236,12 @@ class Rectangle(OpticalElement):
         for k, v in defaults.items():
             self._style.setdefault(k, v)
 
-    def get_local_points(self):
+    def _get_local_points(self):
         w2, h2 = self.width / 2.0, self.height / 2.0
         return np.array([[-w2, -h2], [w2, -h2], [w2, h2], [-w2, h2]])
 
     def _get_mpl_artist(self):
-        pts = self.get_critical_points()
+        pts = self._get_critical_points()
         return MplPolygon(pts, closed=True, **self._style)
 
     def scale(self, scale_factor, about_point=None):
@@ -230,6 +268,7 @@ class SurroundingRectangle(Rectangle):
     """
     A rectangle that surrounds a set of optical elements, with optional buffer.
     """
+
     def __init__(self, elements, buff=0.2, **kwargs):
         if not isinstance(elements, (list, tuple, np.ndarray)):
             elements = [elements]
