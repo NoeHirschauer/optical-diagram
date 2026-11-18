@@ -14,10 +14,7 @@ dependencies = [
     "numpy>=2",
 ]
 
-[dependency-groups]
-dev = [
-    { include-group = "tests" },
-]
+[project.optional-dependencies]
 doc = [
     "sphinx>=9.0",
     "pydata-sphinx-theme>=0.15",
@@ -27,6 +24,13 @@ doc = [
 tests = [
     "pytest>=7.0",
 ]
+
+[dependency-groups]
+dev = [
+    { include-group = "tests" },
+]
+doc = ["optical_diagram[doc]"]
+tests = ["optical_diagram[tests]"]
 
 [project.scripts]
 doc = "_doc:main"
