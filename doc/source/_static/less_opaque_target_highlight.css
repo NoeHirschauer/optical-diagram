@@ -1,0 +1,10 @@
+/*
+change the target color for a less opaque one
+default theme colors are without the two last characters at the end
+*/
+html[data-theme="light"] {
+    --pst-color-target: #f3cf9520;
+}
+html[data-theme="dark"] {
+    --pst-color-target: #675c0420;
+}

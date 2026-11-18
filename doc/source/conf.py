@@ -175,6 +175,7 @@ html_theme_options = {
 # add css files to the build
 html_css_files = [
     "custom_monospace_font.css",
+    "less_opaque_target_highlight.css",
     "remove_sphinx_gallery_download_links.css",
     "wider_article_content.css",
 ]
