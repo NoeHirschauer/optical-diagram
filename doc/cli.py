@@ -7,7 +7,6 @@
 #     "sphinx-design>=0.7.0",
 #     "sphinx-gallery>=0.22.1",
 #     "sphinx-togglebutton>=0.4.5",
-#     "termcolor>=3.3.0",
 # ]
 # ///
 
@@ -25,7 +24,34 @@ import sys
 import threading
 import time
 import webbrowser
+from importlib import metadata
 from pathlib import Path
+
+
+def get_doc_dependencies(package_name: str) -> list[str]:
+    doc_deps = [
+        dep.split()[0].strip()
+        for dep in metadata.requires(package_name)
+        if dep.endswith("extra == 'doc'")
+    ]
+    # clean up the dependency names to remove any version specifiers or extras
+    delimiters = ["<", ">", "=", "[", "]"]
+    for i, dep in enumerate(doc_deps):
+        for delimiter in delimiters:
+            if delimiter in dep:
+                dep = dep.split(delimiter)[0].strip()
+        doc_deps[i] = dep
+
+    return doc_deps
+
+
+def check_dependencies_installed(dependencies: list[str]) -> bool:
+    for dep in dependencies:
+        try:
+            metadata.distribution(dep)
+        except metadata.PackageNotFoundError:
+            return False
+    return True
 
 
 def _doc_dir() -> Path:
@@ -131,7 +157,7 @@ def _view_doc() -> None:
 
 def _make_doc_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="uv run doc",
+        prog="doc",
         description="Documentation commands for the project.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -219,6 +245,12 @@ def main(argv: list[str] | None = None) -> int:
         uv run doc build --help
         uv run doc build -h
     """
+    package_name = "optical_diagram"
+    if not check_dependencies_installed(get_doc_dependencies(package_name)):
+        print("Documentation dependencies are not installed. Installing...")
+        sync_doc_command = ["uv", "sync", "--group", "doc"]
+        subprocess.run(sync_doc_command, check=True)
+
     parser = _make_doc_parser()
     if argv is None:
         argv = sys.argv[1:]

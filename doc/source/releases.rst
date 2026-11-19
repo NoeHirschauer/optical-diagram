@@ -9,14 +9,16 @@ Releases
    :local:
 
 
+-------------
 Version 0.5.1
 -------------
 - Added `Circle` class for drawing circles in the optical diagram.
 - Updated the elements included in the documentation.
 
 
+-----------------
 Previous Releases
-=================
+-----------------
 
 Version 0.5.0
 -------------
